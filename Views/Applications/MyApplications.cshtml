@@ -1,0 +1,24 @@
+@model List<JobApplication>
+@using JobFinderNet.Models
+
+<h2>My Applications</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Job Title</th>
+            <th>Applied Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var app in Model)
+        {
+            <tr>
+                <td>@app.Job?.Title</td>
+                <td>@app.AppliedDate.ToLocalTime().ToString("g")</td>
+                <td>@app.Status</td>
+            </tr>
+        }
+    </tbody>
+</table> 
