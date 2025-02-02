@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JobFinderNet")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a7ed60a8be3a6673e522a41aa3e5c125dad6067")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6de3cf8f755e3fc082fd4291e7f91fb488b463b2")]
 [assembly: System.Reflection.AssemblyProductAttribute("JobFinderNet")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JobFinderNet")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

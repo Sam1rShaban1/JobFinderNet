@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace JobFinderNet.Data;
 
@@ -8,6 +10,7 @@ public static class RoleInitializer
     {
         using var scope = serviceProvider.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<RoleInitializer>>();
 
         string[] roles = { "Admin", "Employer", "Applicant" };
 
@@ -15,7 +18,12 @@ public static class RoleInitializer
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                logger.LogInformation($"Creating role: {role}");
+                var result = await roleManager.CreateAsync(new IdentityRole(role));
+                if (!result.Succeeded)
+                {
+                    logger.LogError($"Failed to create role {role}: {string.Join(", ", result.Errors)}");
+                }
             }
         }
     }

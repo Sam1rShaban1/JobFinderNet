@@ -75,20 +75,26 @@ try
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
-    logger.LogInformation("Ensuring database is created and migrated...");
-    await context.Database.MigrateAsync();  // This ensures database is created and all migrations are applied
+    // Drop and recreate the database
+    logger.LogInformation("Dropping existing database...");
+    await context.Database.EnsureDeletedAsync();
     
-    logger.LogInformation("Starting to seed roles and data...");
+    logger.LogInformation("Creating new database...");
+    await context.Database.MigrateAsync();
+    
+    logger.LogInformation("Initializing roles...");
     await RoleInitializer.Initialize(scope.ServiceProvider);
+    
+    logger.LogInformation("Seeding data...");
     await DataSeeder.SeedData(scope.ServiceProvider);
     
-    logger.LogInformation("Seeding completed successfully");
+    logger.LogInformation("Database initialization completed successfully");
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     logger.LogError(ex, "An error occurred while initializing the database");
-    throw; // Rethrow to see the error details
+    throw;
 }
 
 app.Run();
