@@ -169,4 +169,11 @@ public class JobRepository : IJobRepository
             .Take(pageSize)
             .ToListAsync();
     }
+
+    public async Task<int> GetTotalActiveJobsCount()
+    {
+        return await _context.Jobs
+            .Where(j => j.IsActive)
+            .CountAsync();
+    }
 } 

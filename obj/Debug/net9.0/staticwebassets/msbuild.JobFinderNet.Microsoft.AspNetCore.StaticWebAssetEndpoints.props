@@ -12,6 +12,18 @@
       <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-qpa/wU2gLRHenBrnVAwhKQGqwL7OxlXoGSD1AzZWkcQ="}]]]></EndpointProperties>
       <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1665"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022qpa/wU2gLRHenBrnVAwhKQGqwL7OxlXoGSD1AzZWkcQ=\u0022"},{"Name":"Last-Modified","Value":"Sun, 02 Feb 2025 19:55:16 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/JobFinderNet/css/site.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\site.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"3358"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\u0022"},{"Name":"Last-Modified","Value":"Sun, 02 Feb 2025 21:26:50 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/JobFinderNet/css/site.eqszn2isqb.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\site.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"eqszn2isqb"},{"Name":"integrity","Value":"sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="},{"Name":"label","Value":"_content/JobFinderNet/css/site.css"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"3358"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\u0022"},{"Name":"Last-Modified","Value":"Sun, 02 Feb 2025 21:26:50 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/JobFinderNet/favicon.61n19gt1b8.ico">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\favicon.ico'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>

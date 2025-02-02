@@ -27,10 +27,16 @@ public class JobsController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
-        int page = 1; // Set the page number
-        int pageSize = 10; // Set the number of jobs to display per page
+        int page = 1;
+        int pageSize = 10;
         var jobs = await _jobRepository.GetActiveJobsAsync(page, pageSize);
-        return View(jobs);
+        var totalJobs = await _jobRepository.GetTotalActiveJobsCount();
+        
+        ViewBag.CurrentPage = page;
+        ViewBag.PageSize = pageSize;
+        ViewBag.TotalJobs = totalJobs;
+        
+        return View("Jobs", jobs);
     }
 
     [AllowAnonymous]
@@ -99,8 +105,15 @@ public class JobsController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> LoadMoreJobs(int page = 1)
     {
-        int pageSize = 10; // Number of jobs to load per request
+        int pageSize = 10;
         var jobs = await _jobRepository.GetActiveJobsAsync(page, pageSize);
-        return Json(jobs);
+        var totalJobs = await _jobRepository.GetTotalActiveJobsCount();
+        var totalPages = (int)Math.Ceiling((double)totalJobs / pageSize);
+        
+        return Json(new { 
+            jobs,
+            currentPage = page,
+            totalPages
+        });
     }
 }

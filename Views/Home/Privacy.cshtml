@@ -1,6 +1,67 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h1 class="h2 mb-4">Privacy Policy</h1>
+                    
+                    <div class="mb-4">
+                        <h5 class="mb-3">Information We Collect</h5>
+                        <p>When you use JobFinderNet, we collect the following types of information:</p>
+                        <ul class="list-unstyled ps-3">
+                            <li><i class="fas fa-check-circle text-primary me-2"></i>Personal information (name, email, phone number)</li>
+                            <li><i class="fas fa-check-circle text-primary me-2"></i>Professional details (work experience, education)</li>
+                            <li><i class="fas fa-check-circle text-primary me-2"></i>Application history and interactions</li>
+                            <li><i class="fas fa-check-circle text-primary me-2"></i>Company information for employers</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="mb-3">How We Use Your Information</h5>
+                        <p>We use your information to:</p>
+                        <ul class="list-unstyled ps-3">
+                            <li><i class="fas fa-shield-alt text-primary me-2"></i>Match you with relevant job opportunities</li>
+                            <li><i class="fas fa-shield-alt text-primary me-2"></i>Process job applications</li>
+                            <li><i class="fas fa-shield-alt text-primary me-2"></i>Communicate about application status</li>
+                            <li><i class="fas fa-shield-alt text-primary me-2"></i>Improve our services</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="mb-3">Data Protection</h5>
+                        <p>We implement various security measures to maintain the safety of your personal information, including:</p>
+                        <ul class="list-unstyled ps-3">
+                            <li><i class="fas fa-lock text-primary me-2"></i>Secure SSL encryption</li>
+                            <li><i class="fas fa-lock text-primary me-2"></i>Regular security audits</li>
+                            <li><i class="fas fa-lock text-primary me-2"></i>Limited access to personal information</li>
+                            <li><i class="fas fa-lock text-primary me-2"></i>Data encryption at rest</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="mb-3">Your Rights</h5>
+                        <p>You have the right to:</p>
+                        <ul class="list-unstyled ps-3">
+                            <li><i class="fas fa-user-shield text-primary me-2"></i>Access your personal data</li>
+                            <li><i class="fas fa-user-shield text-primary me-2"></i>Request data deletion</li>
+                            <li><i class="fas fa-user-shield text-primary me-2"></i>Update your information</li>
+                            <li><i class="fas fa-user-shield text-primary me-2"></i>Export your data</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-muted small">
+                        <p class="mb-0">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+}

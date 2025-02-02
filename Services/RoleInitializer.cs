@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using JobFinderNet.Data;
+using JobFinderNet.Models;
+
+namespace JobFinderNet.Services;
 
 public static class RoleInitializer
 {

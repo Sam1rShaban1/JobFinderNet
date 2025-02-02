@@ -1,17 +1,24 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using JobFinderNet.Data
+@using JobFinderNet.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = $"{user?.FirstName} {user?.LastName}".Trim();
+    if (string.IsNullOrEmpty(displayName))
+    {
+        displayName = user?.Email?.Split('@')[0];
+    }
+    
     <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @displayName!</a>
     </li>
     <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
         </form>
     </li>
 }

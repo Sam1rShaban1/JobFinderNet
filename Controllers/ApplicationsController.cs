@@ -31,32 +31,39 @@ public class ApplicationsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Applicant")]
     public async Task<IActionResult> Apply(int jobId)
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return Challenge();
+        if (user == null)
+        {
+            return NotFound();
+        }
 
         var job = await _context.Jobs.FindAsync(jobId);
-        if (job == null) return NotFound();
+        if (job == null || !job.IsActive)
+        {
+            return NotFound();
+        }
 
-        // Check if user has already applied
+        // Check if user already applied
         var existingApplication = await _context.Applications
             .FirstOrDefaultAsync(a => a.JobId == jobId && a.ApplicantId == user.Id);
-
+        
         if (existingApplication != null)
         {
             TempData["Error"] = "You have already applied for this job.";
             return RedirectToAction("Details", "Jobs", new { id = jobId });
         }
 
-               var application = new Application
+        var application = new Application
         {
             JobId = jobId,
-            ApplicantId = user.Id,
-            AppliedDate = DateTime.UtcNow,
-            Status = ApplicationStatus.Pending,
             Job = job,
-            Applicant = user
+            ApplicantId = user.Id,
+            Applicant = user,
+            Status = ApplicationStatus.Pending,
+            AppliedDate = DateTime.UtcNow
         };
 
         _context.Applications.Add(application);

@@ -4,7 +4,7 @@
     ViewData["Title"] = Model?.Title ?? "Job Details";
 }
 
-<div class="container py-5">
+<div class="container py-5 position-relative">
     @if (Model == null)
     {
         <div class="alert alert-danger rounded-4 shadow-sm">
@@ -77,21 +77,24 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="d-flex gap-2 justify-content-center mt-4">
-                    @if (User.IsInRole("Applicant") && Model.IsActive)
-                    {
-                        <form asp-controller="Applications" asp-action="Apply" method="post" class="d-inline">
-                            <input type="hidden" name="jobId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
-                                <i class="fas fa-paper-plane me-2"></i>Apply Now
-                            </button>
-                        </form>
-                    }
-                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
                         <i class="fas fa-arrow-left me-2"></i>Back to Jobs
                     </a>
                 </div>
             </div>
+        </div>
+    }
+    @if (User.IsInRole("Applicant") && Model?.IsActive == true)
+    {
+        <div class="position-fixed bottom-0 end-0 m-4">
+            <form asp-controller="Applications" asp-action="Apply" method="post">
+                <input type="hidden" name="jobId" value="@Model.Id" />
+                <button type="submit" class="btn btn-primary btn-lg rounded-circle shadow-lg p-3" 
+                        data-bs-toggle="tooltip" data-bs-placement="left" title="Apply Now">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
         </div>
     }
 </div>
@@ -99,11 +102,19 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .job-header {
-            background: linear-gradient(to right, rgba(37, 99, 235, 0.05), rgba(37, 99, 235, 0.02));
-            border-radius: 1rem;
+        .btn-lg.rounded-circle {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
         }
-        
+
+        .btn-lg.rounded-circle:hover {
+            transform: scale(1.1);
+        }
+
         .info-card {
             background: rgba(248, 250, 252, 0.8);
             border-radius: 1rem;
@@ -113,10 +124,15 @@
         .info-card:hover {
             transform: translateY(-2px);
         }
-        
-        .description-content {
-            line-height: 1.7;
-            color: var(--text-secondary);
-        }
     </style>
+}
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
 }

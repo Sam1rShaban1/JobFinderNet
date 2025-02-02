@@ -1,17 +1,5 @@
 @model IEnumerable<JobFinderNet.Models.Application>
 
-<div class="container py-5">
-    <h2 class="mb-4">My Applications</h2>
-    
-    <ul class="navbar-nav flex-grow-1">
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </li>
-    </ul>
-
     @if (!Model.Any())
     {
         <div class="alert alert-info">

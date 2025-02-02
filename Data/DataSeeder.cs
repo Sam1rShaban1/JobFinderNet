@@ -64,7 +64,7 @@ public static class DataSeeder
             if (!await context.Jobs.AnyAsync())
             {
                 var jobFaker = JobFactory.Create(employerIds, context);
-                var jobs = jobFaker.Generate(10);
+                var jobs = jobFaker.Generate(40);
                 await context.Jobs.AddRangeAsync(jobs);
                 await context.SaveChangesAsync();
             }

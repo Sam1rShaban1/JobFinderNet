@@ -4,20 +4,26 @@ namespace JobFinderNet.Models;
 
 public class ApplicationResult
 {
-    public bool Success { get; private set; }
-    public string Message { get; private set; }
+    public bool Succeeded { get; private set; }
+    public string Message { get; private set; } = string.Empty;
     public Application? Application { get; private set; }
 
-    private ApplicationResult(bool success, string message, Application? application = null)
+    public static ApplicationResult CreateSuccess(Application application)
     {
-        Success = success;
-        Message = message;
-        Application = application;
+        return new ApplicationResult 
+        { 
+            Succeeded = true,
+            Application = application,
+            Message = "Application submitted successfully"
+        };
     }
 
-    public static ApplicationResult CreateSuccess(Application application) 
-        => new(true, "Application submitted successfully", application);
-
-    public static ApplicationResult CreateError(string message) 
-        => new(false, message);
+    public static ApplicationResult CreateError(string message)
+    {
+        return new ApplicationResult 
+        { 
+            Succeeded = false,
+            Message = message
+        };
+    }
 } 

@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets\\css\\modern.css"
     },
     {
+      "Id": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
       "Id": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
     },

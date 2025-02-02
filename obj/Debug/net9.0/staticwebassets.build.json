@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "vnsv8qn59Wrz/4Lk2X8IWwg6WbWUK8pHzhOef4N9m9s=",
+  "Hash": "GJ39POqGh2k5ew1/sC7pYbVMfu5Qr6ina3uk4JNp5GQ=",
   "Source": "JobFinderNet",
   "BasePath": "_content/JobFinderNet",
   "Mode": "Default",
@@ -2096,6 +2096,27 @@
       "OriginalItemSpec": "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\V5\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css"
     },
     {
+      "Identity": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dxnyk1nrqx-eqszn2isqb.gz",
+      "SourceId": "JobFinderNet",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/JobFinderNet",
+      "RelativePath": "css/site#[.{fingerprint=eqszn2isqb}]?.css.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "4sn7zl130j",
+      "Integrity": "3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css"
+    },
+    {
       "Identity": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dy184hbced-keugtjm085.gz",
       "SourceId": "JobFinderNet",
       "SourceType": "Discovered",
@@ -4049,6 +4070,27 @@
       "OriginalItemSpec": "wwwroot\\css\\modern.css"
     },
     {
+      "Identity": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css",
+      "SourceId": "JobFinderNet",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\",
+      "BasePath": "_content/JobFinderNet",
+      "RelativePath": "css/site#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "eqszn2isqb",
+      "Integrity": "NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\site.css"
+    },
+    {
       "Identity": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\favicon.ico",
       "SourceId": "JobFinderNet",
       "SourceType": "Discovered",
@@ -5684,6 +5726,304 @@
         {
           "Name": "integrity",
           "Value": "sha256-j6fhJSuuyLpOSLuPJU0TsDV0iNjor5S3rDnvxJrt4bg="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dxnyk1nrqx-eqszn2isqb.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000973709834"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1026"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3358"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.css.gz",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dxnyk1nrqx-eqszn2isqb.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1026"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.eqszn2isqb.css",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dxnyk1nrqx-eqszn2isqb.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000973709834"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1026"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "eqszn2isqb"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.eqszn2isqb.css",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "3358"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "eqszn2isqb"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NltAP3db4WljJ2Z2Y2ySIR5H3iIZmH7wQimCgtrx55U="
+        }
+      ]
+    },
+    {
+      "Route": "css/site.eqszn2isqb.css.gz",
+      "AssetFile": "C:\\Users\\Administrator\\JobFinderNet\\obj\\Debug\\net9.0\\compressed\\dxnyk1nrqx-eqszn2isqb.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1026"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 02 Feb 2025 21:26:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "eqszn2isqb"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-3ERUYxKplWH+8Hr4ikm8E8l1F1Xo72OmGOfClVjC8rM="
         }
       ]
     },

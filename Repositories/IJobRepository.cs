@@ -6,6 +6,7 @@ public interface IJobRepository
 {
     Task<Job?> GetByIdAsync(int id);
     Task<IEnumerable<Job>> GetActiveJobsAsync(int page, int pageSize);
+    Task<int> GetTotalActiveJobsCount();
     Task<List<Job>> GetEmployerJobsAsync(string employerId);
     Task CreateJobAsync(Job job);
     Task UpdateJobAsync(Job job);

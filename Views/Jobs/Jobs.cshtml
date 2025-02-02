@@ -1,25 +1,52 @@
+@{
+    ViewData["Title"] = "Home Page";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var pageSize = ViewBag.PageSize ?? 10;
+    var totalJobs = ViewBag.TotalJobs ?? 0;
+    var totalPages = (int)Math.Ceiling((double)totalJobs / pageSize);
+}
+
 @using JobFinderNet.Extensions
 @model IEnumerable<JobFinderNet.Models.Job>
 
+<div class="container mt-5">
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <h2 class="display-6 fw-bold mb-2">Find Your Next Role</h2>
+            <p class="text-muted">Discover opportunities that match your expertise</p>
+        </div>
+    </div>
 
-<div class="container mt-4">
-    <h2>Available Jobs</h2>
-    <div id="job-list" class="row">
+    <div id="job-list" class="row g-4">
         @foreach (var job in Model)
         {
-            <div class="col-md-4 mb-4 job-item" data-jobid="@job.Id">
-                <div class="card h-100 shadow">
-                    <div class="card-body">
-                        <h5 class="card-title">@job.Title</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@job.CompanyName</h6>
-                        <p class="card-text">@job.Description.Shorten(100)</p>
-                        <div class="d-grid gap-2">
-                            <a href="@Url.Action("Details", new { id = job.Id })" 
-                               class="btn btn-primary">View Details</a>
+            <div class="col-md-6 job-item" data-jobid="@job.Id">
+                <div class="card h-100 border-0 job-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title h5 mb-0">@job.Title</h5>
+                            <span class="badge bg-primary-subtle text-primary">@job.JobType</span>
+                        </div>
+                        
+                        <div class="job-meta mb-3">
+                            <div class="d-flex align-items-center text-secondary small">
+                                <i class="fas fa-building me-2"></i>@job.CompanyName
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-map-marker-alt me-2"></i>@job.Location
+                            </div>
+                        </div>
+                        
+                        <p class="card-text small text-secondary mb-3">@job.Description.Shorten(100)</p>
+                        
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="/Jobs/Details/@job.Id" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                View Details
+                            </a>
                             @if (User.IsInRole("Applicant"))
                             {
-                                <button class="btn btn-success apply-btn" 
-                                    data-jobid="@job.Id">Apply Now</button>
+                                <button class="btn btn-primary btn-sm flex-grow-1 apply-btn" data-jobid="@job.Id">
+                                    Apply Now
+                                </button>
                             }
                         </div>
                     </div>
@@ -27,60 +54,142 @@
             </div>
         }
     </div>
-    <div id="loading" class="text-center" style="display: none;">
-        <p>Loading more jobs...</p>
+
+    <div class="d-flex justify-content-center mt-5">
+        <nav aria-label="Page navigation" class="pagination-container">
+            <ul class="pagination">
+                @if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(@(currentPage - 1))">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                }
+                
+                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="#" onclick="changePage(@i)">@i</a>
+                    </li>
+                }
+                
+                @if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(@(currentPage + 1))">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .job-card {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+        
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+            font-weight: 500;
+        }
+        
+        .pagination {
+            gap: 0.25rem;
+        }
+        
+        .page-link {
+            border-radius: 6px;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    </style>
+}
 
 @section Scripts {
     <script>
         let page = 1;
         let loading = false;
 
+        function changePage(newPage) {
+            if (loading) return;
+            page = newPage;
+            $('#job-list').empty();
+            loadMoreJobs();
+        }
+
         function loadMoreJobs() {
             if (loading) return;
             loading = true;
             $('#loading').show();
 
-            $.ajax({
-                url: '@Url.Action("LoadMoreJobs", "Jobs")',
-                type: 'GET',
-                data: { page: page },
-                success: function (data) {
-                    if (data.length > 0) {
-                        data.forEach(job => {
-                            $('#job-list').append(`
-                                <div class="col-md-4 mb-4 job-item" data-jobid="${job.Id}">
-                                    <div class="card h-100 shadow">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${job.Title}</h5>
-                                            <h6 class="card-subtitle mb-2 text-muted">${job.CompanyName}</h6>
-                                            <p class="card-text">${job.Description.Shorten(100)}</p>
-                                            <div class="d-grid gap-2">
-                                                <a href="/Jobs/Details/${job.Id}" class="btn btn-primary">View Details</a>
-                                                <button class="btn btn-success apply-btn" data-jobid="${job.Id}">Apply Now</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `);
-                        });
-                        page++;
-                    } else {
-                        $(window).off('scroll', onScroll);
+            $.get('/Jobs/LoadMoreJobs', { page })
+                .done(data => {
+                    if (data.jobs && data.jobs.length > 0) {
+                        renderJobs(data.jobs);
+                        updatePagination(data.currentPage, data.totalPages);
                     }
+                })
+                .always(() => {
                     loading = false;
                     $('#loading').hide();
-                }
+                });
+        }
+
+        function renderJobs(jobs) {
+            const jobList = $('#job-list');
+            jobs.forEach(job => {
+                const jobHtml = createJobCard(job);
+                jobList.append(jobHtml);
             });
         }
 
-        function onScroll() {
-            if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
-                loadMoreJobs();
-            }
+        function createJobCard(job) {
+            return `
+                <div class="col-md-6 job-item" data-jobid="${job.id}">
+                    <div class="card h-100 border-0 job-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title h5 mb-0">${job.title}</h5>
+                                <span class="badge bg-primary-subtle text-primary">${job.jobType}</span>
+                            </div>
+                            
+                            <div class="job-meta mb-3">
+                                <div class="d-flex align-items-center text-secondary small">
+                                    <i class="fas fa-building me-2"></i>${job.companyName}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-map-marker-alt me-2"></i>${job.location}
+                                </div>
+                            </div>
+                            
+                            <p class="card-text small text-secondary mb-3">${job.description}</p>
+                            
+                            <div class="d-flex gap-2 mt-auto">
+                                <a href="/Jobs/Details/${job.id}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                    View Details
+                                </a>
+                                ${isApplicant ? `
+                                    <button class="btn btn-primary btn-sm flex-grow-1 apply-btn" data-jobid="${job.id}">
+                                        Apply Now
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
-
-        $(window).on('scroll', onScroll);
     </script>
-} 
+}

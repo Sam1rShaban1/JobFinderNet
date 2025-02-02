@@ -4,6 +4,7 @@ using JobFinderNet.Models;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Authorization;
+using JobFinderNet.Repositories;
 
 namespace JobFinderNet.Controllers;
 
@@ -11,18 +12,22 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IActionDescriptorCollectionProvider _actionDescriptorCollectionProvider;
+    private readonly IJobRepository _jobRepository;
 
     public HomeController(
         ILogger<HomeController> logger,
-        IActionDescriptorCollectionProvider actionDescriptorCollectionProvider)
+        IActionDescriptorCollectionProvider actionDescriptorCollectionProvider,
+        IJobRepository jobRepository)
     {
         _logger = logger;
         _actionDescriptorCollectionProvider = actionDescriptorCollectionProvider;
+        _jobRepository = jobRepository;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var jobs = await _jobRepository.GetActiveJobsAsync(1, 10);
+        return View(jobs);
     }
 
     public IActionResult Privacy()
@@ -33,7 +38,7 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View();
     }
 
     public IActionResult Routes()

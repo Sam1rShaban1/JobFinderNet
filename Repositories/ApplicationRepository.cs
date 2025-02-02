@@ -13,11 +13,33 @@ public class ApplicationRepository : IApplicationRepository
         _context = context;
     }
 
+    public async Task<bool> HasUserAppliedToJob(string userId, int jobId)
+    {
+        return await _context.Applications
+            .AnyAsync(a => a.ApplicantId == userId && a.JobId == jobId);
+    }
+
     public async Task<bool> AddAsync(Application application)
     {
-        await _context.Applications.AddAsync(application);
-        var saved = await _context.SaveChangesAsync();
-        return saved > 0;
+        try
+        {
+            await _context.Applications.AddAsync(application);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<IEnumerable<Application>> GetUserApplicationsAsync(string userId)
+    {
+        return await _context.Applications
+            .Include(a => a.Job)
+            .Where(a => a.ApplicantId == userId)
+            .OrderByDescending(a => a.AppliedDate)
+            .ToListAsync();
     }
 
     public async Task<List<Application>> GetJobApplications(int jobId)

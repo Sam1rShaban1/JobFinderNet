@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using JobFinderNet.Data;
+using JobFinderNet.Models;
 using JobFinderNet.Repositories;
 using JobFinderNet.Services;
 
@@ -12,19 +13,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Register repositories and services
+builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<JobService>();
+
 // Fix Identity configuration
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => 
-{
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
     options.SignIn.RequireConfirmedAccount = false;
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequiredLength = 6;
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultUI()
-    .AddDefaultTokenProviders();
+.AddRoles<IdentityRole>()
+.AddDefaultUI()
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -34,10 +39,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IJobRepository, JobRepository>();
-builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
-builder.Services.AddScoped<JobService>();
-
 
 var app = builder.Build();
 
@@ -54,6 +55,7 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
@@ -69,26 +71,33 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
+// Initialize roles and seed data
 try
 {
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    logger.LogInformation("Ensuring database is created and migrated...");
-    await context.Database.MigrateAsync();  // This ensures database is created and all migrations are applied
-    
-    logger.LogInformation("Starting to seed roles and data...");
-    await RoleInitializer.Initialize(scope.ServiceProvider);
-    await DataSeeder.SeedData(scope.ServiceProvider);
-    
-    logger.LogInformation("Seeding completed successfully");
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        // Ensure database is created and migrated
+        await context.Database.MigrateAsync();
+
+        // Initialize roles first
+        await RoleInitializer.Initialize(services);
+        
+        // Then seed the data
+        await DataSeeder.SeedData(services);
+        
+        logger.LogInformation("Database initialization completed");
+    }
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred while initializing the database");
-    throw; // Rethrow to see the error details
+    logger.LogError(ex, "An error occurred while seeding the database.");
 }
 
 app.Run();
