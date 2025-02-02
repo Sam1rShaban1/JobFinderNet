@@ -97,9 +97,10 @@ public static class DataSeeder
                 // Get applicants
                 var applicants = await context.Users
                     .Where(u => seekerIds.Contains(u.Id))
+                    .Cast<ApplicationUser>()
                     .ToListAsync();
 
-                var applications = new List<JobApplication>();
+                var applications = new List<Application>();
                 var random = new Random();
 
                 foreach (var applicant in applicants)
@@ -109,10 +110,10 @@ public static class DataSeeder
 
                     foreach (var job in selectedJobs)
                     {
-                        var application = new JobApplication
+                        var application = new Application
                         {
                             AppliedDate = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(-random.Next(1, 30)), DateTimeKind.Utc),
-                            Status = (ApplicationStatus)random.Next(0, 3),
+                            Status = ApplicationStatus.Pending,
                             JobId = job.Id,
                             Job = job,
                             ApplicantId = applicant.Id,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JobFinderNet.Data;
 
 namespace JobFinderNet.Models;
 
@@ -17,22 +18,9 @@ public class Job
     public DateTime PostedDate { get; set; } = DateTime.UtcNow;
     
     public required string EmployerId { get; set; }
-    public required JobFinderNet.Data.ApplicationUser Employer { get; set; }
+    public required ApplicationUser Employer { get; set; }
     
-    public ICollection<JobApplication> Applications { get; set; } = new List<JobApplication>();
-}
-
-public class JobApplication
-{
-    public int Id { get; set; }
-    public DateTime AppliedDate { get; set; } = DateTime.UtcNow;
-    public ApplicationStatus Status { get; set; }
-    
-    public int JobId { get; set; }
-    public required Job Job { get; set; }
-    
-    public required string ApplicantId { get; set; }
-    public required JobFinderNet.Data.ApplicationUser Applicant { get; set; }
+    public ICollection<Application> Applications { get; set; } = new List<Application>();
 }
 
 public enum ApplicationStatus

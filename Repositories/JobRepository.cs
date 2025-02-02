@@ -20,7 +20,7 @@ public class JobRepository : IJobRepository
     public async Task<bool> ApplyForJobAsync(int jobId, string userId)
     {
         var job = await _context.Jobs.FindAsync(jobId);
-        var applicant = await _context.Users.FindAsync(userId);
+        var applicant = await _context.Users.FindAsync(userId) as ApplicationUser;
         
         if (job == null || applicant == null) return false;
         
@@ -29,17 +29,19 @@ public class JobRepository : IJobRepository
         
         if (existingApplication != null) return false;
         
-        var application = new JobApplication
+        var application = new Application
         {
             JobId = jobId,
             Job = job,
             ApplicantId = userId,
             Applicant = applicant,
-            Status = ApplicationStatus.Pending
+            Status = ApplicationStatus.Pending,
+            AppliedDate = DateTime.UtcNow
         };
-        
+
         _context.Applications.Add(application);
-        return await _context.SaveChangesAsync() > 0;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<Job?> GetByIdAsync(int id)

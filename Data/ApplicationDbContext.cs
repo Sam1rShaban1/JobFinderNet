@@ -5,15 +5,15 @@ using JobFinderNet.Models;
 
 namespace JobFinderNet.Data;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext
 {
-    public DbSet<Job> Jobs { get; set; }
-    public DbSet<JobApplication> Applications { get; set; }
-
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
+
+    public DbSet<Job> Jobs { get; set; } = null!;
+    public DbSet<Application> Applications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -22,7 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // Set table names with correct casing for PostgreSQL
         builder.Entity<ApplicationUser>().ToTable("users");
         builder.Entity<Job>().ToTable("jobs");
-        builder.Entity<JobApplication>().ToTable("applications");
+        builder.Entity<Application>().ToTable("applications");
 
         // Configure relationships
         builder.Entity<Job>()
@@ -41,16 +41,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(j => j.EmployerId)
             .IsRequired();
 
-        builder.Entity<JobApplication>()
+        builder.Entity<Application>()
             .HasOne(a => a.Job)
             .WithMany(j => j.Applications)
             .HasForeignKey(a => a.JobId)
-            .IsRequired();
+            .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Entity<JobApplication>()
+        builder.Entity<Application>()
             .HasOne(a => a.Applicant)
             .WithMany()
             .HasForeignKey(a => a.ApplicantId)
-            .IsRequired();
+            .OnDelete(DeleteBehavior.Cascade);
     }
+
 }

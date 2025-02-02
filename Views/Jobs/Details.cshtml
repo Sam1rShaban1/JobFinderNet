@@ -99,20 +99,24 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .bg-primary-subtle {
-            background-color: rgba(13, 110, 253, 0.1);
+        .job-header {
+            background: linear-gradient(to right, rgba(37, 99, 235, 0.05), rgba(37, 99, 235, 0.02));
+            border-radius: 1rem;
         }
-        .card {
+        
+        .info-card {
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 1rem;
             transition: transform 0.2s;
         }
-        .card:hover {
+        
+        .info-card:hover {
             transform: translateY(-2px);
         }
-        .rounded-4 {
-            border-radius: 1rem !important;
-        }
-        .bg-light {
-            background-color: #f8f9fa !important;
+        
+        .description-content {
+            line-height: 1.7;
+            color: var(--text-secondary);
         }
     </style>
-} 
+}

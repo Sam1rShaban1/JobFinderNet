@@ -37,11 +37,11 @@ public class JobService
         if (await _appRepository.HasApplied(userId, jobId))
             return ApplicationResult.CreateError("Already applied");
 
-        var applicant = await _context.Users.FindAsync(userId);
+        var applicant = await _context.Users.FindAsync(userId) as ApplicationUser;
         if (applicant == null)
             return ApplicationResult.CreateError("User not found");
         
-        var application = new JobApplication
+        var application = new Application
         {
             JobId = jobId,
             Job = job,

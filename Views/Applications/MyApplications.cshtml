@@ -1,24 +1,56 @@
-@model List<JobApplication>
-@using JobFinderNet.Models
+@model IEnumerable<JobFinderNet.Models.Application>
 
-<h2>My Applications</h2>
+<div class="container py-5">
+    <h2 class="mb-4">My Applications</h2>
+    
+    <ul class="navbar-nav flex-grow-1">
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </li>
+    </ul>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Job Title</th>
-            <th>Applied Date</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var app in Model)
-        {
-            <tr>
-                <td>@app.Job?.Title</td>
-                <td>@app.AppliedDate.ToLocalTime().ToString("g")</td>
-                <td>@app.Status</td>
-            </tr>
-        }
-    </tbody>
-</table> 
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            You haven't applied to any jobs yet.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var application in Model)
+            {
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@application.Job.Title</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@application.Job.CompanyName</h6>
+                            
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        @application.Status
+                                    </span>
+                                    <small class="text-muted">
+                                        Applied on @application.AppliedDate.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <a href="@Url.Action("Details", "Jobs", new { id = application.JobId })" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    View Job Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div> 
