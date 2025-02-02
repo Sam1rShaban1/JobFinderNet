@@ -9,4 +9,5 @@ public interface IJobRepository
     Task ToggleJobStatusAsync(int id);
     Task<bool> JobExists(int id);
     Task<bool> ApplyForJobAsync(int jobId, string userId);
+
 } 

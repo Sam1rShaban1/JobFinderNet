@@ -42,4 +42,20 @@ public class JobsController : Controller
     {
         return View(await _applicationRepository.GetJobApplications(jobId));
     }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(int id)
+    {
+        var job = await _jobRepository.GetByIdAsync(id);
+        if (job == null)
+            return NotFound();
+        return View(job);
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Search(string query)
+    {
+        var jobs = await _jobRepository.SearchJobsAsync(query);
+        return View("Index", jobs);
+    }
 }

@@ -1,0 +1,19 @@
+@model Job
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">@Model.Title</h2>
+            <p class="text-muted">Posted on @Model.PostedDate.ToLocalTime().ToString("d")</p>
+            <div class="card-text">@Model.Description</div>
+            
+            @if (User.IsInRole("Applicant"))
+            {
+                <form asp-controller="Applications" asp-action="Apply" method="post">
+                    <input type="hidden" name="jobId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary mt-3">Apply Now</button>
+                </form>
+            }
+        </div>
+    </div>
+</div> 
