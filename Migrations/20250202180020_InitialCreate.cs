@@ -31,6 +31,7 @@ namespace JobFinderNet.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
+                    CompanyName = table.Column<string>(type: "text", nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -165,7 +166,11 @@ namespace JobFinderNet.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    Company = table.Column<string>(type: "text", nullable: false),
+                    CompanyName = table.Column<string>(type: "text", nullable: false),
+                    Location = table.Column<string>(type: "text", nullable: false),
+                    JobType = table.Column<string>(type: "text", nullable: false),
+                    Salary = table.Column<string>(type: "text", nullable: false),
+                    ExperienceRequired = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     PostedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EmployerId = table.Column<string>(type: "text", nullable: false)

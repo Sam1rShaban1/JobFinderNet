@@ -6,7 +6,7 @@
                 <div class="card h-100 shadow">
                     <div class="card-body">
                         <h5 class="card-title">@job.Title</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">@job.Company</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">@job.CompanyName</h6>
                         <p class="card-text">@job.Description.Shorten(100)</p>
                         <div class="d-grid gap-2">
                             <a href="@Url.Action("Details", new { id = job.Id })" 

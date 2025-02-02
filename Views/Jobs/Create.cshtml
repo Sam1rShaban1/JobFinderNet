@@ -3,16 +3,55 @@
 <div class="container mt-4">
     <h2>Post a New Job</h2>
     <form asp-action="Create">
-        <div class="form-group">
-            <label asp-for="Title"></label>
-            <input asp-for="Title" class="form-control" />
+        <div class="form-group mb-3">
+            <label asp-for="Title" class="form-label">Job Title</label>
+            <input asp-for="Title" class="form-control" required />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
-        <div class="form-group">
-            <label asp-for="Description"></label>
-            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+
+        <div class="form-group mb-3">
+            <label asp-for="CompanyName" class="form-label">Company Name</label>
+            <input asp-for="CompanyName" class="form-control" required />
+            <span asp-validation-for="CompanyName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Location" class="form-label">Location</label>
+            <input asp-for="Location" class="form-control" required />
+            <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="JobType" class="form-label">Job Type</label>
+            <select asp-for="JobType" class="form-select" required>
+                <option value="">Select Job Type</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Internship">Internship</option>
+            </select>
+            <span asp-validation-for="JobType" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Salary" class="form-label">Salary</label>
+            <input asp-for="Salary" class="form-control" required />
+            <span asp-validation-for="Salary" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="ExperienceRequired" class="form-label">Experience Required</label>
+            <input asp-for="ExperienceRequired" class="form-control" required />
+            <span asp-validation-for="ExperienceRequired" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Description" class="form-label">Job Description</label>
+            <textarea asp-for="Description" class="form-control" rows="5" required></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-primary mt-3">Create Job</button>
+
+        <button type="submit" class="btn btn-primary">Create Job</button>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
     </form>
 </div> 

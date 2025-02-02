@@ -4,6 +4,7 @@ namespace JobFinderNet.Data;
 
 public class ApplicationUser : IdentityUser
 {
-    // Add custom properties here
+    public string? CompanyName { get; set; }
+    // Add any other custom properties here
 }
 

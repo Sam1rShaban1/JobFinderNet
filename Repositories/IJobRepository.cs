@@ -5,7 +5,7 @@ namespace JobFinderNet.Repositories;
 public interface IJobRepository
 {
     Task<Job?> GetByIdAsync(int id);
-    Task<List<Job>> GetActiveJobsAsync();
+    Task<IEnumerable<Job>> GetActiveJobsAsync(int page, int pageSize);
     Task<List<Job>> GetEmployerJobsAsync(string employerId);
     Task CreateJobAsync(Job job);
     Task UpdateJobAsync(Job job);

@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using JobFinderNet.Data;
 using JobFinderNet.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace JobFinderNet.Repositories;
 

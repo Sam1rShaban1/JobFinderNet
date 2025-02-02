@@ -4,44 +4,67 @@ using JobFinderNet.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using JobFinderNet.Factories;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace JobFinderNet.Data;
 
-public class DataSeeder
+public static class DataSeeder
 {
     public static async Task SeedData(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
 
         try
         {
             logger.LogInformation("Starting data seeding...");
 
-            // Create employers
-            var employers = UserFactory.CreateEmployer().Generate(5);
+            // Create employer users if they don't exist
+            var employers = new List<(string Email, string Name)>
+            {
+                ("employer1@test.com", "Tech Corp"),
+                ("employer2@test.com", "Digital Solutions"),
+                ("employer3@test.com", "Innovation Labs")
+            };
+
             var employerIds = new List<string>();
 
-            foreach (var employer in employers)
+            foreach (var (email, name) in employers)
             {
-                if (await userManager.FindByEmailAsync(employer.Email!) == null)
+                var employer = await userManager.FindByEmailAsync(email);
+                if (employer == null)
                 {
+                    employer = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true,
+                        CompanyName = name
+                    };
+
                     var result = await userManager.CreateAsync(employer, "Employer123!");
                     if (result.Succeeded)
                     {
                         await userManager.AddToRoleAsync(employer, "Employer");
                         employerIds.Add(employer.Id);
-                        logger.LogInformation($"Created employer: {employer.Email}");
+                        logger.LogInformation($"Created employer: {email}");
                     }
+                }
+                else
+                {
+                    employerIds.Add(employer.Id);
                 }
             }
 
-            // Create jobs
-            if (!context.Jobs.Any() && employerIds.Any())
+            // Seed jobs if none exist
+            if (!await context.Jobs.AnyAsync())
             {
-                var jobs = JobFactory.Create(employerIds).Generate(20);
+                var jobFaker = JobFactory.Create(employerIds, context);
+                var jobs = jobFaker.Generate(10);
                 await context.Jobs.AddRangeAsync(jobs);
                 await context.SaveChangesAsync();
             }

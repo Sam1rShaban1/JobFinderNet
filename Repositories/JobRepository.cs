@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace JobFinderNet.Repositories;
 
-
 public class JobRepository : IJobRepository
 {
     private readonly ApplicationDbContext _context;
@@ -48,7 +47,6 @@ public class JobRepository : IJobRepository
         return await _context.Jobs
             .Include(j => j.Employer)
             .Include(j => j.Applications)
-                .ThenInclude(a => a.Applicant)
             .FirstOrDefaultAsync(j => j.Id == id);
     }
 
@@ -85,7 +83,7 @@ public class JobRepository : IJobRepository
         {
             existingJob.Title = job.Title;
             existingJob.Description = job.Description;
-            existingJob.Company = job.Company;
+            existingJob.CompanyName = job.CompanyName;
             existingJob.IsActive = job.IsActive;
             await _context.SaveChangesAsync();
         }
@@ -128,7 +126,7 @@ public class JobRepository : IJobRepository
             .Where(j => j.IsActive && 
                 (j.Title.Contains(query) || 
                  j.Description.Contains(query) || 
-                 j.Company.Contains(query)))
+                 j.CompanyName.Contains(query)))
             .OrderByDescending(j => j.PostedDate)
             .ToListAsync();
     }
@@ -151,5 +149,22 @@ public class JobRepository : IJobRepository
             _context.Jobs.Remove(job);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<Job>> GetByCompanyAsync(string company)
+    {
+        return await _context.Jobs
+            .Where(job => job.CompanyName == company)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Job>> GetActiveJobsAsync(int page, int pageSize)
+    {
+        return await _context.Jobs
+            .Where(j => j.IsActive)
+            .OrderBy(j => j.PostedDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 } 

@@ -30,6 +30,9 @@ namespace JobFinderNet.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CompanyName")
+                        .HasColumnType("text");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -94,7 +97,7 @@ namespace JobFinderNet.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Company")
+                    b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -107,11 +110,27 @@ namespace JobFinderNet.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ExperienceRequired")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("PostedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Salary")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()

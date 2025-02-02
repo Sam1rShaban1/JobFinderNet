@@ -1,0 +1,86 @@
+@using JobFinderNet.Extensions
+@model IEnumerable<JobFinderNet.Models.Job>
+
+
+<div class="container mt-4">
+    <h2>Available Jobs</h2>
+    <div id="job-list" class="row">
+        @foreach (var job in Model)
+        {
+            <div class="col-md-4 mb-4 job-item" data-jobid="@job.Id">
+                <div class="card h-100 shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">@job.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@job.CompanyName</h6>
+                        <p class="card-text">@job.Description.Shorten(100)</p>
+                        <div class="d-grid gap-2">
+                            <a href="@Url.Action("Details", new { id = job.Id })" 
+                               class="btn btn-primary">View Details</a>
+                            @if (User.IsInRole("Applicant"))
+                            {
+                                <button class="btn btn-success apply-btn" 
+                                    data-jobid="@job.Id">Apply Now</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <div id="loading" class="text-center" style="display: none;">
+        <p>Loading more jobs...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let page = 1;
+        let loading = false;
+
+        function loadMoreJobs() {
+            if (loading) return;
+            loading = true;
+            $('#loading').show();
+
+            $.ajax({
+                url: '@Url.Action("LoadMoreJobs", "Jobs")',
+                type: 'GET',
+                data: { page: page },
+                success: function (data) {
+                    if (data.length > 0) {
+                        data.forEach(job => {
+                            $('#job-list').append(`
+                                <div class="col-md-4 mb-4 job-item" data-jobid="${job.Id}">
+                                    <div class="card h-100 shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${job.Title}</h5>
+                                            <h6 class="card-subtitle mb-2 text-muted">${job.CompanyName}</h6>
+                                            <p class="card-text">${job.Description.Shorten(100)}</p>
+                                            <div class="d-grid gap-2">
+                                                <a href="/Jobs/Details/${job.Id}" class="btn btn-primary">View Details</a>
+                                                <button class="btn btn-success apply-btn" data-jobid="${job.Id}">Apply Now</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                        page++;
+                    } else {
+                        $(window).off('scroll', onScroll);
+                    }
+                    loading = false;
+                    $('#loading').hide();
+                }
+            });
+        }
+
+        function onScroll() {
+            if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+                loadMoreJobs();
+            }
+        }
+
+        $(window).on('scroll', onScroll);
+    </script>
+} 
