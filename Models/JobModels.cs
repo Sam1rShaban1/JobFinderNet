@@ -6,16 +6,16 @@ namespace JobFinderNet.Models;
 public class Job
 {
     public int Id { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
-    public string Company { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public required string Company { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime PostedDate { get; set; } = DateTime.UtcNow;
     
-    public string EmployerId { get; set; }
-    public ApplicationUser Employer { get; set; }
+    public required string EmployerId { get; set; }
+    public required JobFinderNet.Data.ApplicationUser Employer { get; set; }
     
-    public ICollection<JobApplication> Applications { get; set; }
+    public ICollection<JobApplication> Applications { get; set; } = new List<JobApplication>();
 }
 
 public class JobApplication
@@ -25,10 +25,10 @@ public class JobApplication
     public ApplicationStatus Status { get; set; }
     
     public int JobId { get; set; }
-    public Job Job { get; set; }
+    public required Job Job { get; set; }
     
-    public string ApplicantId { get; set; }
-    public ApplicationUser Applicant { get; set; }
+    public required string ApplicantId { get; set; }
+    public required JobFinderNet.Data.ApplicationUser Applicant { get; set; }
 }
 
 public enum ApplicationStatus

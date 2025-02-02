@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 
+namespace JobFinderNet.Data;
+
 public class ApplicationUser : IdentityUser
 {
-    // Custom properties here
+    // Add custom properties here
 }
 

@@ -4,8 +4,9 @@ namespace JobFinderNet.Repositories;
 
 public interface IJobRepository
 {
-    Task<Job> GetByIdAsync(int id);
+    Task<Job?> GetByIdAsync(int id);
     Task<List<Job>> GetActiveJobsAsync();
+    Task<List<Job>> GetEmployerJobsAsync(string employerId);
     Task CreateJobAsync(Job job);
     Task UpdateJobAsync(Job job);
     Task ToggleJobStatusAsync(int id);
@@ -13,4 +14,6 @@ public interface IJobRepository
     Task<bool> ApplyForJobAsync(int jobId, string userId);
     Task<PaginatedList<Job>> GetPaginatedJobsAsync(int pageIndex, int pageSize);
     Task<List<Job>> SearchJobsAsync(string query);
+    Task<List<Job>> GetRecentJobsAsync(int count);
+    Task DeleteJobAsync(int id);
 } 

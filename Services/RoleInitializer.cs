@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using JobFinderNet.Data;
 
 public static class RoleInitializer
 {
@@ -14,6 +15,7 @@ public static class RoleInitializer
         string[] roleNames = { "Admin", "Employer", "Applicant" };
         foreach (var roleName in roleNames)
         {
+        
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 await roleManager.CreateAsync(new IdentityRole(roleName));
