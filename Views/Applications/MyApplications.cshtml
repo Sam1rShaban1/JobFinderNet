@@ -1,24 +1,206 @@
 @model List<JobApplication>
 @using JobFinderNet.Models
 
-<h2>My Applications</h2>
+<div class="container py-5">
+    <!-- Header Section with Search and Filter -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="display-4 mb-3">My Applications</h2>
+            <p class="text-muted">Track your job application status and progress</p>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex justify-content-md-end gap-2">
+                <select class="form-select w-auto" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+                <input type="text" class="form-control w-auto" placeholder="Search jobs..." id="searchInput">
+            </div>
+        </div>
+    </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Job Title</th>
-            <th>Applied Date</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var app in Model)
-        {
-            <tr>
-                <td>@app.Job?.Title</td>
-                <td>@app.AppliedDate.ToLocalTime().ToString("g")</td>
-                <td>@app.Status</td>
-            </tr>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="empty-state-animation mb-4">
+                <i class="fas fa-clipboard-list fa-4x text-primary"></i>
+            </div>
+            <h3>No Applications Yet</h3>
+            <p class="text-muted">Start your career journey by applying to jobs!</p>
+            <a href="@Url.Action("Index", "Jobs")" class="btn btn-primary mt-3 pulse-button">
+                <i class="fas fa-search me-2"></i>Browse Jobs
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row" id="applicationsContainer">
+            @foreach (var app in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4 application-card" 
+                     data-status="@app.Status" 
+                     data-title="@app.Job?.Title?.ToLower()">
+                    <div class="card h-100 shadow-sm border-0 hover-shadow">
+                        <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                            @{
+                                var statusClass = app.Status switch
+                                {
+                                    ApplicationStatus.Pending => "bg-warning",
+                                    ApplicationStatus.Accepted => "bg-success",
+                                    ApplicationStatus.Rejected => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass position-absolute top-0 end-0 mt-3 me-3">@app.Status</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title mb-3 text-truncate">@app.Job?.Title</h5>
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="far fa-building me-2"></i>@app.Job?.Company
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="far fa-clock me-2"></i>Applied on @app.AppliedDate.ToLocalTime().ToString("MMM dd, yyyy")
+                                </small>
+                            </div>
+                            @if (!string.IsNullOrEmpty(app.Job?.Description))
+                            {
+                                <p class="card-text small text-muted">@(app.Job?.Description?.Length > 100 ? app.Job?.Description?.Substring(0, 100) + "..." : app.Job?.Description)</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 pb-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="@Url.Action("Details", "Jobs", new { id = app.JobId })" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-2"></i>View Details
+                                </a>
+                                <button class="btn btn-light btn-sm" data-bs-toggle="tooltip" title="Save Notes">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Status Guide Card -->
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card bg-light border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3 text-primary">Application Status Guide</h6>
+                        <div class="d-flex flex-wrap gap-4">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning me-2">Pending</span>
+                                <small class="text-muted">Under Review</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">Accepted</span>
+                                <small class="text-muted">Application Approved</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-danger me-2">Rejected</span>
+                                <small class="text-muted">Not Selected</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .hover-shadow {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,.05) !important;
         }
-    </tbody>
-</table> 
+        
+        .hover-shadow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .card {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .badge {
+            padding: 0.5em 1em;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .empty-state-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .pulse-button {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @@keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        #searchInput, #statusFilter {
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,.1);
+            padding: 8px 16px;
+        }
+
+        #searchInput:focus, #statusFilter:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13,110,253,.15);
+            border-color: #86b7fe;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Filter functionality
+            function filterApplications() {
+                var searchText = $('#searchInput').val().toLowerCase();
+                var statusFilter = $('#statusFilter').val();
+
+                $('.application-card').each(function() {
+                    var card = $(this);
+                    var title = card.data('title');
+                    var status = card.data('status');
+                    
+                    var matchesSearch = title.includes(searchText);
+                    var matchesStatus = !statusFilter || status === statusFilter;
+
+                    if (matchesSearch && matchesStatus) {
+                        card.show();
+                    } else {
+                        card.hide();
+                    }
+                });
+            }
+
+            $('#searchInput').on('keyup', filterApplications);
+            $('#statusFilter').on('change', filterApplications);
+        });
+    </script>
+} 

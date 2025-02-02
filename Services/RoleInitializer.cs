@@ -7,36 +7,44 @@ public static class RoleInitializer
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
     {
-        using var scope = serviceProvider.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-        string[] roleNames = { "Admin", "Employer", "Applicant" };
-        foreach (var roleName in roleNames)
+        using (var scope = serviceProvider.CreateScope())
         {
-            if (!await roleManager.RoleExistsAsync(roleName))
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+            string[] roleNames = { "Admin", "Employer", "JobSeeker" };
+
+            foreach (var roleName in roleNames)
             {
-                await roleManager.CreateAsync(new IdentityRole(roleName));
+                // Check if role already exists
+                var roleExists = await roleManager.RoleExistsAsync(roleName);
+                if (!roleExists)
+                {
+                    // Create role if it doesn't exist
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
             }
-        }
 
-        // Create default admin user
-        var adminEmail = "admin@jobfinder.net";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            // Create admin user if it doesn't exist
+            var adminEmail = "admin@jobfinder.com";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
-        if (adminUser == null)
-        {
-            adminUser = new ApplicationUser
+            if (adminUser == null)
             {
-                UserName = adminEmail,
-                Email = adminEmail,
-                EmailConfirmed = true
-            };
+                var admin = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    EmailConfirmed = true
+                };
 
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                var result = await userManager.CreateAsync(admin, "Admin123!");
+
+                if (result.Succeeded)
+                {
+                    // Only add to role if user creation succeeded
+                    await userManager.AddToRoleAsync(admin, "Admin");
+                }
             }
         }
     }

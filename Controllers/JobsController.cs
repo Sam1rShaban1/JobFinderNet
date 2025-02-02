@@ -46,12 +46,30 @@ public class JobsController : Controller
     }
 
     [AllowAnonymous]
-    public async Task<IActionResult> Details(int id)
+    public IActionResult Details(int id)
     {
-        var job = await _jobRepository.GetByIdAsync(id);
-        if (job == null)
-            return NotFound();
-        return View(job);
+        try
+        {
+            var job = new Job
+            {
+                Id = id,
+                Title = "Test Job Position",
+                JobType = "Full-time",
+                CompanyName = "Test Company",
+                Location = "Test Location",
+                Salary = "$50,000 - $70,000",
+                ExperienceRequired = "2+ years",
+                Description = "<p>This is a test job description.</p>",
+                PostedDate = DateTime.Now
+            };
+
+            return View(job);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in Details action: {ex.Message}");
+            return Content($"Error: {ex.Message}");
+        }
     }
 
     [AllowAnonymous]
