@@ -293,3 +293,5 @@ C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.pdb
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.genruntimeconfig.cache
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\ref\JobFinderNet.dll
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.sourcelink.json
+C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Embedded.dll

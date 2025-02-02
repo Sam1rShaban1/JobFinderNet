@@ -1,16 +1,23 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using JobFinderNet.Models;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobFinderNet.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IActionDescriptorCollectionProvider _actionDescriptorCollectionProvider;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(
+        ILogger<HomeController> logger,
+        IActionDescriptorCollectionProvider actionDescriptorCollectionProvider)
     {
         _logger = logger;
+        _actionDescriptorCollectionProvider = actionDescriptorCollectionProvider;
     }
 
     public IActionResult Index()
@@ -27,5 +34,23 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    public IActionResult Routes()
+    {
+        var routes = _actionDescriptorCollectionProvider.ActionDescriptors.Items
+            .OfType<ControllerActionDescriptor>()
+            .Select(x => new
+            {
+                Action = x.ActionName,
+                Controller = x.ControllerName,
+                Path = $"/{x.ControllerName}/{x.ActionName}",
+                Attributes = string.Join(", ", x.EndpointMetadata.OfType<AuthorizeAttribute>()
+                    .Select(a => $"[{a.Roles ?? "Authenticated"}]"))
+            })
+            .OrderBy(x => x.Path)
+            .ToList();
+
+        return View(routes);
     }
 }

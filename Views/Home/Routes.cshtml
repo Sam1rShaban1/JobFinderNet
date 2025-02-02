@@ -1,0 +1,25 @@
+@model IEnumerable<dynamic>
+
+<h2>Available Routes</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Path</th>
+            <th>Controller</th>
+            <th>Action</th>
+            <th>Authorization</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var route in Model)
+        {
+            <tr>
+                <td>@route.Path</td>
+                <td>@route.Controller</td>
+                <td>@route.Action</td>
+                <td>@(string.IsNullOrEmpty(route.Attributes) ? "Public" : route.Attributes)</td>
+            </tr>
+        }
+    </tbody>
+</table> 

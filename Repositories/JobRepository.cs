@@ -37,25 +37,34 @@ public class JobRepository : IJobRepository
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task AddAsync(Job job) => await _context.Jobs.AddAsync(job);
-    public async Task UpdateAsync(Job job) => _context.Jobs.Update(job);
-    public async Task DeleteAsync(int id) => _context.Jobs.Remove(await GetByIdAsync(id));
+    public async Task<Job> GetByIdAsync(int id)
+    {
+        return await _context.Jobs.FindAsync(id);
+    }
 
-    public async Task<List<Job>> GetActiveJobsAsync() => 
-        await _context.Jobs.Where(j => j.IsActive).ToListAsync();
+    public async Task<List<Job>> GetActiveJobsAsync()
+    {
+        return await _context.Jobs
+            .Where(j => j.IsActive)
+            .OrderByDescending(j => j.PostedDate)
+            .ToListAsync();
+    }
 
-    public async Task CreateJobAsync(Job job) => await _context.Jobs.AddAsync(job);
-    
-    public async Task UpdateJobAsync(Job job) => _context.Jobs.Update(job);
-    
-    public async Task<bool> JobExists(int id) => 
-        await _context.Jobs.AnyAsync(e => e.Id == id);
+    public async Task CreateJobAsync(Job job)
+    {
+        await _context.Jobs.AddAsync(job);
+        await _context.SaveChangesAsync();
+    }
 
-    public async Task<Job> GetByIdAsync(int id) => await _context.Jobs.FindAsync(id);
+    public async Task UpdateJobAsync(Job job)
+    {
+        _context.Jobs.Update(job);
+        await _context.SaveChangesAsync();
+    }
 
     public async Task ToggleJobStatusAsync(int id)
     {
-        var job = await GetByIdAsync(id);
+        var job = await _context.Jobs.FindAsync(id);
         if (job != null)
         {
             job.IsActive = !job.IsActive;
@@ -63,12 +72,17 @@ public class JobRepository : IJobRepository
         }
     }
 
+    public async Task<bool> JobExists(int id)
+    {
+        return await _context.Jobs.AnyAsync(j => j.Id == id);
+    }
+
     public async Task<PaginatedList<Job>> GetPaginatedJobsAsync(int pageIndex, int pageSize)
     {
         var query = _context.Jobs
             .Where(j => j.IsActive)
             .OrderByDescending(j => j.PostedDate);
-        
+            
         var count = await query.CountAsync();
         var items = await query.Skip((pageIndex - 1) * pageSize)
                               .Take(pageSize)
