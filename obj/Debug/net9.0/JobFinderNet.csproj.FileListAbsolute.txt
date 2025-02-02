@@ -292,3 +292,4 @@ C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\refint\JobFinderNet.dll
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.pdb
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.genruntimeconfig.cache
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\ref\JobFinderNet.dll
+C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.sourcelink.json

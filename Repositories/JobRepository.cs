@@ -62,4 +62,27 @@ public class JobRepository : IJobRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<PaginatedList<Job>> GetPaginatedJobsAsync(int pageIndex, int pageSize)
+    {
+        var query = _context.Jobs
+            .Where(j => j.IsActive)
+            .OrderByDescending(j => j.PostedDate);
+        
+        var count = await query.CountAsync();
+        var items = await query.Skip((pageIndex - 1) * pageSize)
+                              .Take(pageSize)
+                              .ToListAsync();
+                              
+        return new PaginatedList<Job>(items, count, pageIndex, pageSize);
+    }
+
+    public async Task<List<Job>> SearchJobsAsync(string query)
+    {
+        return await _context.Jobs
+            .Where(j => j.IsActive && 
+                (j.Title.Contains(query) || j.Description.Contains(query)))
+            .OrderByDescending(j => j.PostedDate)
+            .ToListAsync();
+    }
 } 

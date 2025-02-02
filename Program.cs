@@ -5,7 +5,6 @@ using JobFinderNet.Repositories;
 using JobFinderNet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");

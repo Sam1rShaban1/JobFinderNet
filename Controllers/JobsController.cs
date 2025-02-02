@@ -19,9 +19,11 @@ public class JobsController : Controller
     }
 
     [AllowAnonymous]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int pageIndex = 1)
     {
-        return View(await _jobRepository.GetActiveJobsAsync());
+        const int PageSize = 10;
+        var jobs = await _jobRepository.GetPaginatedJobsAsync(pageIndex, PageSize);
+        return View(jobs);
     }
 
     [HttpPost]
@@ -55,6 +57,9 @@ public class JobsController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Search(string query)
     {
+        if (string.IsNullOrWhiteSpace(query))
+            return RedirectToAction(nameof(Index));
+        
         var jobs = await _jobRepository.SearchJobsAsync(query);
         return View("Index", jobs);
     }

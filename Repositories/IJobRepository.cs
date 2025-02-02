@@ -9,5 +9,6 @@ public interface IJobRepository
     Task ToggleJobStatusAsync(int id);
     Task<bool> JobExists(int id);
     Task<bool> ApplyForJobAsync(int jobId, string userId);
-
+    Task<PaginatedList<Job>> GetPaginatedJobsAsync(int pageIndex, int pageSize);
+    Task<List<Job>> SearchJobsAsync(string query);
 } 
