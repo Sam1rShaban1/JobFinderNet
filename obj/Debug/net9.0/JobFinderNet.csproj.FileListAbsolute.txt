@@ -7,6 +7,7 @@ C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.MvcApplication
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.RazorAssemblyInfo.cache
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.RazorAssemblyInfo.cs
+C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.sourcelink.json
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\appsettings.Development.json
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\appsettings.json
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\JobFinderNet.staticwebassets.runtime.json
@@ -17,6 +18,7 @@ C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\JobFinderNet.deps.json
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\JobFinderNet.runtimeconfig.json
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\JobFinderNet.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\JobFinderNet.pdb
+C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Bogus.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Humanizer.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.Internal.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
@@ -43,6 +45,8 @@ C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.Config
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Embedded.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.Identity.Core.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
 C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.Logging.dll
@@ -292,6 +296,3 @@ C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\refint\JobFinderNet.dll
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.pdb
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.genruntimeconfig.cache
 C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\ref\JobFinderNet.dll
-C:\Users\Administrator\JobFinderNet\obj\Debug\net9.0\JobFinderNet.sourcelink.json
-C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Abstractions.dll
-C:\Users\Administrator\JobFinderNet\bin\Debug\net9.0\Microsoft.Extensions.FileProviders.Embedded.dll

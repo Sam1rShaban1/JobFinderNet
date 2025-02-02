@@ -28,13 +28,13 @@
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\JobFinderNet.mzmaro1n1w.bundle.scp.css'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
       <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8="}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1130"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8=\u0022"},{"Name":"Last-Modified","Value":"Fri, 31 Jan 2025 22:18:57 GMT"}]]]></ResponseHeaders>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1130"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8=\u0022"},{"Name":"Last-Modified","Value":"Sun, 02 Feb 2025 16:59:28 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/JobFinderNet/JobFinderNet.mzmaro1n1w.bundle.scp.css">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\JobFinderNet.mzmaro1n1w.bundle.scp.css'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
       <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"mzmaro1n1w"},{"Name":"integrity","Value":"sha256-HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8="},{"Name":"label","Value":"_content/JobFinderNet/JobFinderNet.bundle.scp.css"}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1130"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8=\u0022"},{"Name":"Last-Modified","Value":"Fri, 31 Jan 2025 22:18:57 GMT"}]]]></ResponseHeaders>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1130"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022HkK9Fzhe9z/qvM7Eqq\u002BILwq7EoMJHP4oZP3pO78k8T8=\u0022"},{"Name":"Last-Modified","Value":"Sun, 02 Feb 2025 16:59:28 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/JobFinderNet/js/site.js">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\site.js'))</AssetFile>

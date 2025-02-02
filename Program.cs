@@ -71,12 +71,24 @@ app.MapRazorPages()
 
 try
 {
-    await RoleInitializer.Initialize(app.Services);
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    logger.LogInformation("Ensuring database is created and migrated...");
+    await context.Database.MigrateAsync();  // This ensures database is created and all migrations are applied
+    
+    logger.LogInformation("Starting to seed roles and data...");
+    await RoleInitializer.Initialize(scope.ServiceProvider);
+    await DataSeeder.SeedData(scope.ServiceProvider);
+    
+    logger.LogInformation("Seeding completed successfully");
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred while seeding roles.");
+    logger.LogError(ex, "An error occurred while initializing the database");
+    throw; // Rethrow to see the error details
 }
 
 app.Run();

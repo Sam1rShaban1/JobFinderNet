@@ -54,8 +54,3 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .IsRequired();
     }
 }
-
-public class ApplicationUser : IdentityUser
-{
-    // Add custom properties here
-}
