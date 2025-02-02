@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobFinderNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250131223436_InitialCreate")]
+    [Migration("20250202160847_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -77,71 +77,6 @@ namespace JobFinderNet.Migrations
                     b.ToTable("ApplicationUser");
                 });
 
-            modelBuilder.Entity("Job", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("EmployerId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("PostedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployerId");
-
-                    b.ToTable("Jobs");
-                });
-
-            modelBuilder.Entity("JobApplication", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicantId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("AppliedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("JobId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicantId");
-
-                    b.HasIndex("JobId");
-
-                    b.ToTable("Applications");
-                });
-
             modelBuilder.Entity("JobFinderNet.Data.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -203,7 +138,76 @@ namespace JobFinderNet.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("JobFinderNet.Models.Job", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("EmployerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PostedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployerId");
+
+                    b.ToTable("jobs", (string)null);
+                });
+
+            modelBuilder.Entity("JobFinderNet.Models.JobApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicantId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("AppliedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("JobId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantId");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("applications", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -285,12 +289,10 @@ namespace JobFinderNet.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("text");
@@ -327,12 +329,10 @@ namespace JobFinderNet.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
                         .HasColumnType("text");
@@ -342,7 +342,7 @@ namespace JobFinderNet.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Job", b =>
+            modelBuilder.Entity("JobFinderNet.Models.Job", b =>
                 {
                     b.HasOne("ApplicationUser", "Employer")
                         .WithMany()
@@ -353,7 +353,7 @@ namespace JobFinderNet.Migrations
                     b.Navigation("Employer");
                 });
 
-            modelBuilder.Entity("JobApplication", b =>
+            modelBuilder.Entity("JobFinderNet.Models.JobApplication", b =>
                 {
                     b.HasOne("ApplicationUser", "Applicant")
                         .WithMany()
@@ -361,8 +361,8 @@ namespace JobFinderNet.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Job", "Job")
-                        .WithMany()
+                    b.HasOne("JobFinderNet.Models.Job", "Job")
+                        .WithMany("Applications")
                         .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -421,6 +421,11 @@ namespace JobFinderNet.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("JobFinderNet.Models.Job", b =>
+                {
+                    b.Navigation("Applications");
                 });
 #pragma warning restore 612, 618
         }

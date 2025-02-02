@@ -1,3 +1,5 @@
+using JobFinderNet.Models;
+
 namespace JobFinderNet.Repositories;
 
 public interface IJobRepository

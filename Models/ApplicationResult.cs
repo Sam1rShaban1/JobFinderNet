@@ -1,19 +1,16 @@
+using JobFinderNet.Models;
+
+namespace JobFinderNet.Models;
+
 public class ApplicationResult
 {
-    public bool Success { get; }
-    public string Error { get; }
-    public JobApplication? Application { get; }
+    public bool Success { get; private set; }
+    public string? Error { get; private set; }
+    public JobApplication? Application { get; private set; }
 
-    private ApplicationResult(bool success, string error, JobApplication? application)
-    {
-        Success = success;
-        Error = error;
-        Application = application;
-    }
+    public static ApplicationResult CreateSuccess(JobApplication application) =>
+        new() { Success = true, Application = application };
 
-    public static ApplicationResult CreateSuccess(JobApplication app) => 
-        new(true, null, app);
-    
-    public static ApplicationResult CreateError(string error) => 
-        new(false, error, null);
+    public static ApplicationResult CreateError(string error) =>
+        new() { Success = false, Error = error };
 } 

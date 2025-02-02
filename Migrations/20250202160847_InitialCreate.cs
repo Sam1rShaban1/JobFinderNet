@@ -52,7 +52,7 @@ namespace JobFinderNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUsers",
+                name: "users",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
@@ -73,26 +73,27 @@ namespace JobFinderNet.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.PrimaryKey("PK_users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Jobs",
+                name: "jobs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    PostedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Company = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    PostedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EmployerId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Jobs", x => x.Id);
+                    table.PrimaryKey("PK_jobs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Jobs_ApplicationUser_EmployerId",
+                        name: "FK_jobs_ApplicationUser_EmployerId",
                         column: x => x.EmployerId,
                         principalTable: "ApplicationUser",
                         principalColumn: "Id",
@@ -134,9 +135,9 @@ namespace JobFinderNet.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                        name: "FK_AspNetUserClaims_users_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -145,8 +146,8 @@ namespace JobFinderNet.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
                     UserId = table.Column<string>(type: "text", nullable: false)
                 },
@@ -154,9 +155,9 @@ namespace JobFinderNet.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
                     table.ForeignKey(
-                        name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+                        name: "FK_AspNetUserLogins_users_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -178,9 +179,9 @@ namespace JobFinderNet.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+                        name: "FK_AspNetUserRoles_users_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -190,57 +191,57 @@ namespace JobFinderNet.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    LoginProvider = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
                     Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
                     table.ForeignKey(
-                        name: "FK_AspNetUserTokens_AspNetUsers_UserId",
+                        name: "FK_AspNetUserTokens_users_UserId",
                         column: x => x.UserId,
-                        principalTable: "AspNetUsers",
+                        principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Applications",
+                name: "applications",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ApplicantId = table.Column<string>(type: "text", nullable: false),
-                    JobId = table.Column<int>(type: "integer", nullable: false),
                     AppliedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    JobId = table.Column<int>(type: "integer", nullable: false),
+                    ApplicantId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Applications", x => x.Id);
+                    table.PrimaryKey("PK_applications", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Applications_ApplicationUser_ApplicantId",
+                        name: "FK_applications_ApplicationUser_ApplicantId",
                         column: x => x.ApplicantId,
                         principalTable: "ApplicationUser",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Applications_Jobs_JobId",
+                        name: "FK_applications_jobs_JobId",
                         column: x => x.JobId,
-                        principalTable: "Jobs",
+                        principalTable: "jobs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Applications_ApplicantId",
-                table: "Applications",
+                name: "IX_applications_ApplicantId",
+                table: "applications",
                 column: "ApplicantId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Applications_JobId",
-                table: "Applications",
+                name: "IX_applications_JobId",
+                table: "applications",
                 column: "JobId");
 
             migrationBuilder.CreateIndex(
@@ -270,27 +271,27 @@ namespace JobFinderNet.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_jobs_EmployerId",
+                table: "jobs",
+                column: "EmployerId");
+
+            migrationBuilder.CreateIndex(
                 name: "EmailIndex",
-                table: "AspNetUsers",
+                table: "users",
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
-                table: "AspNetUsers",
+                table: "users",
                 column: "NormalizedUserName",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Jobs_EmployerId",
-                table: "Jobs",
-                column: "EmployerId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Applications");
+                name: "applications");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -308,13 +309,13 @@ namespace JobFinderNet.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Jobs");
+                name: "jobs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "users");
 
             migrationBuilder.DropTable(
                 name: "ApplicationUser");

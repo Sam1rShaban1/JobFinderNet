@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using JobFinderNet.Models;
 
 namespace JobFinderNet.Data;
 
@@ -18,10 +19,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
-        // Remove duplicate ApplicationUser entity configuration
-        builder.Entity<ApplicationUser>().ToTable("AspNetUsers");
+        // Set table names with correct casing for PostgreSQL
+        builder.Entity<ApplicationUser>().ToTable("users");
+        builder.Entity<Job>().ToTable("jobs");
+        builder.Entity<JobApplication>().ToTable("applications");
 
         // Configure relationships
+        builder.Entity<Job>()
+            .Property(j => j.Title)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Entity<Job>()
+            .Property(j => j.Description)
+            .HasMaxLength(1000)
+            .IsRequired();
+
         builder.Entity<Job>()
             .HasOne(j => j.Employer)
             .WithMany()
@@ -29,15 +42,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .IsRequired();
 
         builder.Entity<JobApplication>()
-            .HasOne(a => a.Applicant)
-            .WithMany()
-            .HasForeignKey(a => a.ApplicantId)
+            .HasOne(a => a.Job)
+            .WithMany(j => j.Applications)
+            .HasForeignKey(a => a.JobId)
             .IsRequired();
 
         builder.Entity<JobApplication>()
-            .HasOne(a => a.Job)
+            .HasOne(a => a.Applicant)
             .WithMany()
-            .HasForeignKey(a => a.JobId)
+            .HasForeignKey(a => a.ApplicantId)
             .IsRequired();
     }
 }
