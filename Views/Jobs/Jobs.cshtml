@@ -42,12 +42,6 @@
                             <a href="/Jobs/Details/@job.Id" class="btn btn-outline-primary btn-sm flex-grow-1">
                                 View Details
                             </a>
-                            @if (User.IsInRole("Applicant"))
-                            {
-                                <button class="btn btn-primary btn-sm flex-grow-1 apply-btn" data-jobid="@job.Id">
-                                    Apply Now
-                                </button>
-                            }
                         </div>
                     </div>
                 </div>
@@ -157,6 +151,16 @@
         }
 
         function createJobCard(job) {
+            const isAuthenticated = @Json.Serialize(User.Identity?.IsAuthenticated);
+            const applyButton = isAuthenticated && job.isActive 
+                ? `<form action="/Applications/Apply" method="post">
+                    <input type="hidden" name="jobId" value="${job.id}" />
+                    <button type="submit" class="btn btn-success btn-sm flex-grow-1">
+                        Apply Now
+                    </button>
+                   </form>`
+                : '';
+
             return `
                 <div class="col-md-6 job-item" data-jobid="${job.id}">
                     <div class="card h-100 border-0 job-card">
@@ -180,11 +184,7 @@
                                 <a href="/Jobs/Details/${job.id}" class="btn btn-outline-primary btn-sm flex-grow-1">
                                     View Details
                                 </a>
-                                ${isApplicant ? `
-                                    <button class="btn btn-primary btn-sm flex-grow-1 apply-btn" data-jobid="${job.id}">
-                                        Apply Now
-                                    </button>
-                                ` : ''}
+                                ${applyButton}
                             </div>
                         </div>
                     </div>
