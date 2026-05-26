@@ -1,121 +1,146 @@
+# JobFinderNet — Service-Oriented Job Search & Recruitment Platform
 
-# Job Finder 🔍
+A .NET 10 Web API powering job listings, applications, messaging, and user management with a clean service-oriented architecture.
 
-Job Finder is a web application that allows users to search for job listings, save job preferences, and interact with employers. The platform provides features such as user profiles, saved jobs, job applications, and real-time messaging.
+## Project Structure
 
-## Table of Contents
-
-- [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Directory Structure](#directory-structure)
-- [Contributing](#contributing)
-- [License](#license)
-
-## 🛠 Installation
-
-Follow these steps to set up and run the project locally:
-
-### Prerequisites
-
-- [.NET 8.0](https://dotnet.microsoft.com/download/dotnet/8.0) or higher
-- [Visual Studio](https://visualstudio.microsoft.com/) or any IDE that supports .NET development
-- [SQL Server](https://www.microsoft.com/en-us/sql-server) or any database of your choice
-
-### Steps
-
-1. Clone this repository to your local machine:
-   ```bash
-   git clone https://github.com/your-username/job-finder.git
-   ```
-
-2. Navigate to the project directory:
-   ```bash
-   cd job-finder
-   ```
-
-3. Restore the NuGet packages:
-   ```bash
-   dotnet restore
-   ```
-
-4. Set up the database connection in the `appsettings.json` file:
-   ```json
-   "ConnectionStrings": {
-     "DefaultConnection": "YourConnectionStringHere"
-   }
-   ```
-
-5. Apply the database migrations:
-   ```bash
-   dotnet ef database update
-   ```
-
-6. Run the application:
-   ```bash
-   dotnet run
-   ```
-
-Your application should now be running locally at `http://localhost:5000`.
-
-## Usage
-
-- Visit the home page to view available job listings.
-- Users can register, login, and update their profiles.
-- Job seekers can save jobs, apply for listings, and send messages to employers.
-- Employers can manage job postings and view applications from job seekers.
-
-## 🌟 Features
-
-- 🔐 **User Authentication**: Role-based user authentication with ASP.NET Core Identity.
-- 💼 **Job Listings**: Search and filter job listings.
-- ❤️ **Save Jobs**: Save and manage job applications.
-- 💬 **Messaging**: Send and receive messages between job seekers and employers.
-- 🔔 **Notifications**: Get notifications for job updates and application statuses.
-- 📊 **Analytics**: Track user engagement and interactions.
-
-## Technologies Used
-
-- **Frontend**: HTML, CSS, React.js, and Razor Views (ASP.NET Core MVC)
-- **Backend**: ASP.NET Core (C#), Entity Framework Core
-- **Database**: Postgres (or any other relational database)
-- **Authentication**: ASP.NET Core Identity
-- **Dependency Injection**: Used for repository and service injection
-- **API**: RESTful API for handling job-related data and user interactions
-- **Version Control**: Git, GitHub
-
-## Directory Structure
-
-```plaintext
-/JobFinderCS
-│
-├── /Controllers                # API and MVC controllers
-│
-├── /Models                     # Entity models
-│
-├── /Repositories               # Data access logic
-│
-├── /Views                       # Razor views for MVC
-│
-├── /Data                       # Database context and migrations
-│
-├── /wwwroot                    # Static files (CSS, JS, Images)
-│
-└── appsettings.json            # Application configuration
+```
+JobFinderNet/
+├── src/
+│   ├── JobFinderNet.Core/              # Domain models, interfaces, DTOs
+│   │   ├── Models/                     # Entity models (Job, Application, ApplicationUser)
+│   │   ├── Interfaces/
+│   │   │   ├── Repositories/           # Repository contracts
+│   │   │   └── Services/               # Service contracts
+│   │   └── DTOs/                       # API data transfer objects
+│   ├── JobFinderNet.Infrastructure/    # Data access, external services
+│   │   ├── Data/                       # DbContext, migrations, seeding
+│   │   ├── Repositories/               # EF Core repository implementations
+│   │   ├── Services/                   # Business logic service implementations
+│   │   └── Factories/                  # Test data generators (Bogus)
+│   ├── JobFinderNet.Api/               # ASP.NET Core Web API
+│   │   ├── Controllers/                # REST API controllers
+│   │   ├── Middleware/                  # Error handling middleware
+│   │   ├── Auth/                       # JWT token service
+│   │   └── Program.cs                  # App entry point & DI config
+│   └── JobFinderNet.Tests/             # xUnit tests
+│       ├── Repositories/               # Repository tests (InMemory EF)
+│       ├── Services/                   # Service tests (Moq)
+│       └── Controllers/                # Controller tests (Moq)
+├── .github/workflows/deploy.yml        # CI/CD pipeline
+├── infra/main.bicep                    # Azure infrastructure templates
+└── README.md
 ```
 
-## 🤝 Contributing
+## Tech Stack
 
-We welcome contributions! If you'd like to contribute, please follow these steps:
+| Component | Technology |
+|---|---|
+| Framework | .NET 10.0, ASP.NET Core |
+| Database | PostgreSQL (via Npgsql) |
+| ORM | Entity Framework Core 10.0 |
+| Auth | JWT Bearer + ASP.NET Core Identity |
+| Testing | xUnit, Moq, EF Core InMemory |
+| CI/CD | GitHub Actions |
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature-name`)
-3. Make your changes
-4. Commit your changes (`git commit -am 'Add new feature'`)
-5. Push to the branch (`git push origin feature/your-feature-name`)
-6. Create a new pull request
+## Architecture — Service-Oriented
 
-## 📜 License
+```
+┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐
+│  React SPA  │────▶│  JobFinderNet   │────▶│   PostgreSQL     │
+│  (optional) │     │  Web API        │     │   Database       │
+└─────────────┘     │                 │     └──────────────────┘
+                    │  Controllers    │
+                    │       │         │
+                    │  Services       │
+                    │       │         │
+                    │  Repositories   │
+                    │       │         │
+                    │  EF Core        │
+                    └─────────────────┘
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Layers:**
+- **Core** — Contains only domain models, interfaces, and DTOs. No infrastructure dependencies.
+- **Infrastructure** — Implements Core interfaces. Handles data access, external services, and seeding.
+- **Api** — Presentation layer. Controllers handle HTTP, delegate business logic to services.
+- **Tests** — Unit tests for all layers using mocks and in-memory database.
+
+## API Endpoints
+
+### Authentication
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/auth/register` | Register new user | None |
+| POST | `/api/auth/login` | Login, returns JWT | None |
+| GET | `/api/auth/me` | Get current user | JWT |
+
+### Jobs
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/jobs` | List jobs (paginated) | None |
+| GET | `/api/jobs/{id}` | Get job details | None |
+| GET | `/api/jobs/search?query=` | Search jobs | None |
+| POST | `/api/jobs` | Create job | Employer/Admin |
+| DELETE | `/api/jobs/{id}` | Delete job | Employer/Admin |
+| POST | `/api/jobs/{id}/toggle` | Toggle active status | Employer/Admin |
+| GET | `/api/jobs/employer` | Employer's jobs | Employer |
+| GET | `/api/jobs/{id}/applications` | View applicants | Employer/Admin |
+
+### Applications
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/applications/{jobId}` | Apply to job | Applicant |
+| GET | `/api/applications/my` | My applications | User |
+| PUT | `/api/applications/{id}/status` | Update status | Employer/Admin |
+
+## Setup Instructions
+
+### Prerequisites
+- .NET 10 SDK
+- PostgreSQL (local or remote)
+
+### Configuration
+Update `src/JobFinderNet.Api/appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=JobFinderDb;Username=postgres;Password=your_password;Port=5432"
+  },
+  "Jwt": {
+    "Key": "YourSecretKeyHereAtLeast32CharactersLong!",
+    "Issuer": "JobFinderNet",
+    "Audience": "JobFinderNet"
+  }
+}
+```
+
+### Run Locally
+```bash
+export PATH="$HOME/.dotnet10:$PATH"
+dotnet restore
+dotnet build
+dotnet run --project src/JobFinderNet.Api
+```
+
+The API starts on `http://localhost:5179` with Swagger at `/openapi/v1.json`.
+
+### Run Tests
+```bash
+dotnet test
+```
+
+## Default Accounts (seeded)
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@jobfinder.net | Admin123! |
+| Employer | employer@jobfinder.net | Employer123! |
+| Applicant | applicant@jobfinder.net | Applicant123! |
+
+## Team
+- **Samir Shabani**
+- **Muhamed Idrizi**
+- **Menan Sali**
+
+South East European University — Service Oriented Architecture, 2026
