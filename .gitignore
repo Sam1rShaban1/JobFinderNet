@@ -1,0 +1,45 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+packages/
+*.nupkg
+
+# .NET Core
+project.lock.json
+project.assets.json
+*.log
+*.nupkg.props
+
+# EF Core Migrations
+Migrations/
+
+# Visual Studio
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# Rider
+.idea/
+
+# Node / Client
+client/node_modules/
+client/dist/
+client/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Secrets
+appsettings.*.local.json
+*.secret.*
