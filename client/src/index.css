@@ -1,0 +1,118 @@
+/* ===== Reset & Base ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#1f2937;background:#f3f4f6;line-height:1.6}
+a{color:#2563eb;text-decoration:none}
+a:hover{text-decoration:underline}
+#root{min-height:100vh;display:flex;flex-direction:column}
+
+/* ===== Container ===== */
+.container{max-width:1100px;margin:0 auto;padding:24px 20px}
+
+/* ===== Navbar ===== */
+.navbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:60px;gap:24px}
+.nav-brand{font-weight:700;font-size:1.2rem;color:#1f2937;margin-right:auto}
+.nav-links{display:flex;gap:16px}
+.nav-link{color:#4b5563;font-size:0.9rem}
+.nav-link:hover{color:#1f2937;text-decoration:none}
+.nav-auth{margin-left:auto}
+.nav-user{display:flex;align-items:center;gap:12px}
+.nav-email{color:#4b5563;font-size:0.85rem}
+.nav-auth-links{display:flex;gap:8px}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:8px;font-size:0.9rem;font-weight:500;cursor:pointer;transition:all 0.2s;border:2px solid transparent;text-decoration:none}
+.btn:hover{text-decoration:none}
+.btn-primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-outline{background:transparent;color:#2563eb;border-color:#2563eb}
+.btn-outline:hover{background:#2563eb;color:#fff}
+.btn-sm{padding:6px 14px;font-size:0.8rem}
+.btn-full{width:100%}
+.btn-text{background:none;border:none;color:#2563eb;cursor:pointer;padding:0;font-size:0.9rem}
+
+/* ===== Auth Pages ===== */
+.auth-page{display:flex;justify-content:center;align-items:center;flex:1;padding:40px 20px}
+.auth-card{background:#fff;padding:32px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);width:100%;max-width:400px}
+.auth-card h2{margin-bottom:24px;color:#1f2937}
+.auth-link{text-align:center;margin-top:16px;font-size:0.85rem;color:#6b7280}
+
+/* ===== Forms ===== */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;margin-bottom:6px;font-size:0.85rem;font-weight:500;color:#374151}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:0.9rem;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-row{display:flex;gap:16px}
+.form-row .form-group{flex:1}
+.form-page{background:#fff;padding:32px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);max-width:700px;margin:0 auto}
+.form-page h2{margin-bottom:24px}
+
+/* ===== Alerts ===== */
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:0.85rem}
+.alert-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.alert-success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+
+/* ===== Jobs List ===== */
+.jobs-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.jobs-header h1{font-size:1.5rem}
+.search-bar{margin-bottom:24px}
+.search-bar input{width:100%;padding:12px 16px;border:1px solid #d1d5db;border-radius:10px;font-size:1rem;background:#fff}
+.search-bar input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.job-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.job-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:12px;transition:box-shadow 0.2s}
+.job-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.job-card-header{display:flex;justify-content:space-between;align-items:start}
+.job-card-header h3{font-size:1.1rem;color:#1f2937}
+.job-card-body{flex:1}
+.company{font-weight:500;color:#374151;margin-bottom:8px}
+.meta{display:flex;flex-wrap:wrap;gap:12px;font-size:0.8rem;color:#6b7280;margin-bottom:4px}
+.date{font-size:0.8rem;color:#9ca3af}
+.no-results{grid-column:1/-1;text-align:center;color:#6b7280;padding:40px}
+
+/* ===== Job Detail ===== */
+.job-detail{background:#fff;padding:32px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-top:16px}
+.detail-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:20px}
+.detail-header h1{font-size:1.5rem;margin:0}
+.detail-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px;font-size:0.9rem}
+.detail-meta div{color:#374151}
+.detail-description h3{margin-bottom:12px;font-size:1rem}
+.detail-description p{color:#4b5563;line-height:1.7}
+
+/* ===== Badges ===== */
+.badge{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600}
+.badge.full-time,.badge.full-time{background:#dbeafe;color:#1e40af}
+.badge.part-time{background:#fef3c7;color:#92400e}
+.badge.contract{background:#e0e7ff;color:#3730a3}
+.badge.internship{background:#d1fae5;color:#065f46}
+.status-pending{background:#fef3c7;color:#92400e}
+.status-approved{background:#dbeafe;color:#1e40af}
+.status-rejected{background:#fef2f2;color:#991b1b}
+.status-withdrawn{background:#f3f4f6;color:#4b5563}
+.role-employer{background:#e0e7ff;color:#3730a3}
+.role-applicant{background:#d1fae5;color:#065f46}
+
+/* ===== Applications ===== */
+.applications-list{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.application-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center}
+.app-info h3{font-size:1rem;margin-bottom:4px;color:#1f2937}
+.app-info .company{font-size:0.85rem;margin-bottom:2px}
+.app-info .date{font-size:0.8rem;color:#9ca3af}
+
+/* ===== Pagination ===== */
+.pagination{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:24px}
+.pagination button{padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;cursor:pointer}
+.pagination button:disabled{opacity:0.5;cursor:default}
+.pagination span{color:#6b7280;font-size:0.85rem}
+
+/* ===== Home ===== */
+.subtitle{color:#6b7280;font-size:1.1rem;margin-bottom:32px}
+.home-cta{display:flex;gap:12px;justify-content:center}
+
+/* ===== Responsive ===== */
+@media(max-width:640px){
+  .form-row{flex-direction:column;gap:0}
+  .job-grid{grid-template-columns:1fr}
+  .detail-meta{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .nav-email{display:none}
+}
