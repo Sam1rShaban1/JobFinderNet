@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JobFinderNet.Api/JobFinderNet.Api.csproj" />
+    <Project Path="src/JobFinderNet.Core/JobFinderNet.Core.csproj" />
+    <Project Path="src/JobFinderNet.Infrastructure/JobFinderNet.Infrastructure.csproj" />
+    <Project Path="src/JobFinderNet.Tests/JobFinderNet.Tests.csproj" />
+  </Folder>
+</Solution>
