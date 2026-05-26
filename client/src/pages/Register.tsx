@@ -1,26 +1,27 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Applicant');
-  const [error, setError] = useState('');
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('Applicant')
+  const [error, setError] = useState('')
+  const { register } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    const err = await register(email, password, role);
-    if (err) setError(err);
-    else navigate('/jobs');
-  };
+    e.preventDefault()
+    setError('')
+    const err = await register(email, password, role)
+    if (err) setError(err)
+    else navigate('/jobs')
+  }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <p className="micro" style={{ marginBottom: 12 }}>Get started</p>
         <h2>Create Account</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
@@ -29,7 +30,7 @@ export default function Register() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Password (min 6 characters)</label>
+            <label>Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
           <div className="form-group">
@@ -46,5 +47,5 @@ export default function Register() {
         </p>
       </div>
     </div>
-  );
+  )
 }

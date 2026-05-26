@@ -1,25 +1,26 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    const err = await login(email, password);
-    if (err) setError(err);
-    else navigate('/jobs');
-  };
+    e.preventDefault()
+    setError('')
+    const err = await login(email, password)
+    if (err) setError(err)
+    else navigate('/jobs')
+  }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <p className="micro" style={{ marginBottom: 12 }}>Welcome back</p>
         <h2>Sign In</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
@@ -38,5 +39,5 @@ export default function Login() {
         </p>
       </div>
     </div>
-  );
+  )
 }
