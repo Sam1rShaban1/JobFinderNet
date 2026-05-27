@@ -48,3 +48,4 @@ appsettings.*.local.json
 .env
 
 client/.agents/
+client/skills-lock.json
