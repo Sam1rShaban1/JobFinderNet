@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useUser, SignInButton, UserButton } from '@clerk/react'
+import { useAppUser } from '../context/AppContext'
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { isSignedIn, user: clerkUser } = useUser()
+  const { user: appUser } = useAppUser()
 
   return (
     <nav className="navbar">
@@ -10,24 +12,26 @@ export default function Navbar() {
         <Link to="/" className="nav-brand">JobFinderNet</Link>
         <div className="nav-links">
           <Link to="/jobs" className="nav-link">Jobs</Link>
-          {user?.role === 'Applicant' && (
+          {appUser?.role === 'Applicant' && (
             <Link to="/my-applications" className="nav-link">My Applications</Link>
           )}
-          {user?.role === 'Employer' && (
+          {appUser?.role === 'Employer' && (
             <Link to="/create-job" className="nav-link">Post Job</Link>
           )}
         </div>
         <div className="nav-auth">
-          {user ? (
+          {isSignedIn ? (
             <div className="nav-user">
-              <span className="nav-email">{user.email}</span>
-              <span className={`badge role-${user.role.toLowerCase()}`}>{user.role}</span>
-              <button onClick={logout} className="btn btn-outline btn-sm">Logout</button>
+              <span className="nav-email">{clerkUser?.username || clerkUser?.primaryEmailAddress?.emailAddress}</span>
+              {appUser && <span className={`badge role-${appUser.role.toLowerCase()}`}>{appUser.role}</span>}
+              <UserButton afterSignOutUrl="/" />
             </div>
           ) : (
             <div className="nav-auth-links">
-              <Link to="/login" className="btn btn-outline btn-sm">Sign In</Link>
-              <Link to="/register" className="btn btn-primary btn-sm">Register</Link>
+              <SignInButton mode="redirect">
+                <button className="btn btn-outline btn-sm">Sign In</button>
+              </SignInButton>
+              <Link to="/sign-up" className="btn btn-primary btn-sm">Register</Link>
             </div>
           )}
         </div>

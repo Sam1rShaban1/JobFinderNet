@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useUser } from '@clerk/react'
+import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
-import { useAuth } from '../context/AuthContext'
 
 interface Job {
   id: number
@@ -19,7 +20,8 @@ interface Job {
 export default function JobDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { isSignedIn } = useUser()
+  const { user: appUser } = useAppUser()
   const [job, setJob] = useState<Job | null>(null)
   const [message, setMessage] = useState('')
 
@@ -91,7 +93,7 @@ export default function JobDetails() {
             <p className="micro" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>Interested?</p>
             <h3>Apply for this position</h3>
             <p>Submit your application and take the next step in your career.</p>
-            {user?.role === 'Applicant' ? (
+            {appUser?.role === 'Applicant' ? (
               <button onClick={handleApply} className="btn btn-primary">Submit Application</button>
             ) : (
               <p className="micro" style={{ color: 'rgba(255,255,255,0.5)' }}>

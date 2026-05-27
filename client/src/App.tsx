@@ -1,16 +1,14 @@
-import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import { AppProvider } from './context/AppContext'
 import Jobs from './pages/Jobs'
 import JobDetails from './pages/JobDetails'
 import CreateJob from './pages/CreateJob'
 import MyApplications from './pages/MyApplications'
 
 function Home() {
-  const { user } = useAuth()
+  const { isSignedIn } = useUser()
   return (
     <>
       <section className="hero-section">
@@ -20,10 +18,10 @@ function Home() {
           Connect with top employers and discover career-defining roles
           that match your skills and ambitions.
         </p>
-        {!user ? (
+        {!isSignedIn ? (
           <div className="hero-actions">
-            <a href="/register" className="btn btn-primary">Get Started</a>
-            <a href="/login" className="btn btn-secondary">Sign In</a>
+            <a href="/sign-up" className="btn btn-primary">Get Started</a>
+            <a href="/sign-in" className="btn btn-secondary">Sign In</a>
           </div>
         ) : (
           <div className="hero-actions">
@@ -79,36 +77,36 @@ function Home() {
             Post jobs, review applications, and build your team
             with our powerful recruitment platform.
           </p>
-          {!user && <a href="/register" className="btn btn-primary">Start Hiring</a>}
+          {!isSignedIn && <a href="/sign-up" className="btn btn-primary">Start Hiring</a>}
         </div>
       </div>
     </>
   )
 }
 
-function ProtectedRoute({ children, roles }: { children: React.ReactElement; roles?: string[] }) {
-  const { user } = useAuth()
-  if (!user) return <Navigate to="/login" />
-  if (roles && !roles.includes(user.role)) return <Navigate to="/jobs" />
+function ProtectedRoute({ children }: { children: React.ReactElement }) {
+  const { isSignedIn, isLoaded } = useUser()
+  if (!isLoaded) return null
+  if (!isSignedIn) return <Navigate to="/sign-in" />
   return children
 }
 
 export default function App() {
   return (
-    <>
+    <AppProvider>
       <Navbar />
       <main style={{ flex: 1 }}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
+          <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/create-job" element={
-            <ProtectedRoute roles={['Employer']}><CreateJob /></ProtectedRoute>
+            <ProtectedRoute><CreateJob /></ProtectedRoute>
           } />
           <Route path="/my-applications" element={
-            <ProtectedRoute roles={['Applicant']}><MyApplications /></ProtectedRoute>
+            <ProtectedRoute><MyApplications /></ProtectedRoute>
           } />
         </Routes>
       </main>
@@ -118,6 +116,6 @@ export default function App() {
           <span className="micro">&copy; {new Date().getFullYear()} JobFinderNet. All rights reserved.</span>
         </div>
       </footer>
-    </>
+    </AppProvider>
   )
 }

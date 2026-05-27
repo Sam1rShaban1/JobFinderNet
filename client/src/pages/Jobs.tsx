@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
-import { useAuth } from '../context/AuthContext'
 
 interface Job {
   id: number
@@ -20,7 +20,7 @@ export default function Jobs() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const { user } = useAuth()
+  const { user } = useAppUser()
 
   useEffect(() => {
     const fetchJobs = async () => {
