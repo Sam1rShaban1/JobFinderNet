@@ -69,7 +69,7 @@ public class JobsController : ControllerBase
     [Authorize(Roles = "Employer,Admin")]
     public async Task<ActionResult<Job>> CreateJob(CreateJobDto dto)
     {
-        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+        var employerId = User.FindFirstValue("sub") 
             ?? throw new InvalidOperationException("User ID not found");
 
         var employer = await _userManager.FindByIdAsync(employerId);
@@ -112,7 +112,7 @@ public class JobsController : ControllerBase
     [Authorize(Roles = "Employer")]
     public async Task<ActionResult> GetEmployerJobs()
     {
-        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var employerId = User.FindFirstValue("sub")!;
         var jobs = await _jobRepository.GetEmployerJobsAsync(employerId);
         return Ok(jobs);
     }

@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,7 +8,6 @@ using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Infrastructure.Data;
 using JobFinderNet.Infrastructure.Repositories;
 using JobFinderNet.Infrastructure.Services;
-using JobFinderNet.Api.Auth;
 using JobFinderNet.Api.Middleware;
 using Scalar.AspNetCore;
 
@@ -29,7 +27,6 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddSingleton<JwtService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -43,25 +40,61 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+var clerkAuthority = builder.Configuration["Clerk:Authority"]
+    ?? throw new InvalidOperationException("Clerk:Authority not configured.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobFinderNet",
-        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "JobFinderNet",
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "SuperSecretKeyForDevelopment12345678!"))
-    };
-});
+        options.Authority = clerkAuthority;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = clerkAuthority,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                try
+                {
+                    var userManager = context.HttpContext.RequestServices
+                        .GetRequiredService<UserManager<ApplicationUser>>();
+                    var sub = context.Principal?.FindFirst("sub")?.Value;
+                    if (sub == null) return;
+
+                    if (await userManager.FindByIdAsync(sub) != null) return;
+
+                    var email = context.Principal?.FindFirst("email")?.Value ?? $"{sub}@clerk.dev";
+                    var user = new ApplicationUser
+                    {
+                        Id = sub,
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true,
+                    };
+                    var result = await userManager.CreateAsync(user);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, "Applicant");
+                    }
+                }
+                catch
+                {
+                    // user provisioning skipped, will retry in AuthController.Me()
+                }
+            },
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+                logger.LogWarning(context.Exception, "Clerk JWT validation failed");
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -76,10 +109,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapFallbackToFile("index.html");
 
 try
 {

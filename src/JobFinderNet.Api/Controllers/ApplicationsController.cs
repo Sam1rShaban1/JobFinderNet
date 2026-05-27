@@ -35,7 +35,7 @@ public class ApplicationsController : ControllerBase
     [Authorize(Roles = "Applicant")]
     public async Task<ActionResult> Apply(int jobId)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.FindFirstValue("sub")!;
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null) return Unauthorized();
 
@@ -67,7 +67,7 @@ public class ApplicationsController : ControllerBase
     [HttpGet("my")]
     public async Task<ActionResult> MyApplications()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.FindFirstValue("sub")!;
         var applications = await _applicationRepository.GetUserApplicationsAsync(userId);
         return Ok(applications);
     }
