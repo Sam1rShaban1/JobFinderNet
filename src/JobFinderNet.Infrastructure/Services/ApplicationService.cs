@@ -63,7 +63,16 @@ public class ApplicationService : IApplicationService
         if (!saved)
             return ApplicationResult.CreateError("Failed to submit application");
 
-        await _notificationService.SendApplicationSubmittedAsync(applicant.Email ?? "", job.Title);
+        var applicantName = applicant.UserName ?? applicant.Email ?? "Applicant";
+        await _notificationService.SendApplicationSubmittedAsync(
+            applicant.Email ?? "", applicantName, job.Title, job.CompanyName);
+
+        if (job.Employer != null)
+        {
+            var employerName = job.Employer.CompanyName ?? job.Employer.UserName ?? "Employer";
+            await _notificationService.SendNewApplicationToEmployerAsync(
+                job.Employer.Email ?? "", employerName, applicantName, job.Title);
+        }
 
         return ApplicationResult.CreateSuccess(application);
     }
@@ -87,8 +96,10 @@ public class ApplicationService : IApplicationService
         application.Status = newStatus;
         await _context.SaveChangesAsync();
 
+        var applicantName = application.Applicant.UserName ?? application.Applicant.Email ?? "Applicant";
         await _notificationService.SendApplicationStatusChangedAsync(
             application.Applicant.Email ?? "",
+            applicantName,
             application.Job.Title,
             newStatus);
 

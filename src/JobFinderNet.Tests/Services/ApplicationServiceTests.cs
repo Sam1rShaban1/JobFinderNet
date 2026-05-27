@@ -56,7 +56,12 @@ public class ApplicationServiceTests
 
         Assert.True(result.Succeeded);
         Assert.Equal("Application submitted successfully", result.Message);
-        _mockNotificationService.Verify(n => n.SendApplicationSubmittedAsync("app@test.com", "Test Job"), Times.Once);
+        _mockNotificationService.Verify(
+            n => n.SendApplicationSubmittedAsync("app@test.com", "app@test.com", "Test Job", "Test Corp"),
+            Times.Once);
+        _mockNotificationService.Verify(
+            n => n.SendNewApplicationToEmployerAsync("emp@test.com", "Test Company", "app@test.com", "Test Job"),
+            Times.Once);
     }
 
     [Fact]
