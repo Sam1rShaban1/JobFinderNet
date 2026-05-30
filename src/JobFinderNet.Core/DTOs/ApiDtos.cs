@@ -47,7 +47,7 @@ public class CreateJobDto
     public string Title { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(1000)]
+    [StringLength(10000)]
     public string Description { get; set; } = string.Empty;
 
     [Required]

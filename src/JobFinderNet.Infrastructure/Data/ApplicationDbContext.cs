@@ -24,13 +24,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Job>()
             .Property(j => j.Title)
-            .HasMaxLength(100)
+            .HasMaxLength(200)
             .IsRequired();
 
         builder.Entity<Job>()
             .Property(j => j.Description)
-            .HasMaxLength(1000)
+            .HasColumnType("text")
             .IsRequired();
+
+        builder.Entity<Job>()
+            .Property(j => j.CompanyName)
+            .HasMaxLength(200);
+
+        builder.Entity<Job>()
+            .Property(j => j.Location)
+            .HasMaxLength(500);
+
+        builder.Entity<Job>()
+            .HasIndex(j => j.ExternalJobId)
+            .IsUnique()
+            .HasFilter("\"ExternalJobId\" IS NOT NULL");
 
         builder.Entity<Job>()
             .HasOne(j => j.Employer)

@@ -15,10 +15,26 @@ public class JSearchOptions
 {
     public const string SectionName = "JSearch";
     public string ApiKey { get; set; } = "";
-    public string ApiHost { get; set; } = "jsearch.p.rapidapi.com";
-    public string BaseUrl { get; set; } = "https://jsearch.p.rapidapi.com";
-    public List<string> Queries { get; set; } = ["software engineer", "data analyst", "product manager"];
-    public int MaxPages { get; set; } = 2;
+    public string BaseUrl { get; set; } = "https://api.openwebninja.com/jsearch";
+    public List<string> Queries { get; set; } =
+    [
+        "software engineer",
+        "data analyst",
+        "product manager",
+        "full stack developer",
+        "devops engineer",
+        "data scientist",
+        "ux designer",
+        "project manager",
+        "sales engineer",
+        "backend engineer",
+        "frontend developer",
+        "machine learning engineer",
+        "cloud architect",
+        "security engineer",
+        "mobile developer",
+    ];
+    public int MaxPages { get; set; } = 5;
 }
 
 public class JSearchJobService : IJSearchJobService
@@ -59,22 +75,27 @@ public class JSearchJobService : IJSearchJobService
         {
             if (ct.IsCancellationRequested) break;
 
-            for (int page = 1; page <= _options.MaxPages; page++)
+            var cursor = (string?)null;
+            for (int page = 0; page < _options.MaxPages; page++)
             {
-                var jobs = await FetchPageAsync(query, page, ct);
+                var (jobs, nextCursor) = await FetchPageAsync(query, cursor, ct);
                 if (jobs.Count == 0) break;
 
                 foreach (var jSearchJob in jobs)
                 {
-                    if (await context.Jobs.AnyAsync(j => j.Title == jSearchJob.JobTitle
-                        && j.CompanyName == jSearchJob.EmployerName
-                        && j.Location == FormatLocation(jSearchJob), ct)) continue;
+                    if (string.IsNullOrEmpty(jSearchJob.JobId)) continue;
+
+                    var exists = await context.Jobs.AnyAsync(j => j.ExternalJobId == jSearchJob.JobId, ct);
+                    if (exists) continue;
 
                     context.Jobs.Add(MapToJob(jSearchJob, systemEmployerId));
                     totalAdded++;
                 }
 
                 await context.SaveChangesAsync(ct);
+
+                if (string.IsNullOrEmpty(nextCursor)) break;
+                cursor = nextCursor;
             }
         }
 
@@ -82,28 +103,53 @@ public class JSearchJobService : IJSearchJobService
         return totalAdded;
     }
 
-    private async Task<List<JSearchJob>> FetchPageAsync(string query, int page, CancellationToken ct)
+    private async Task<(List<JSearchJob> Jobs, string? NextCursor)> FetchPageAsync(
+        string query, string? cursor, CancellationToken ct)
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get,
-                $"{_options.BaseUrl}/search?query={Uri.EscapeDataString(query)}&page={page}&num_pages=1");
+            var url = $"{_options.BaseUrl}/search-v2?query={Uri.EscapeDataString(query)}&num_pages=5";
+            if (!string.IsNullOrEmpty(cursor))
+                url += $"&cursor={Uri.EscapeDataString(cursor)}";
 
-            request.Headers.Add("x-rapidapi-key", _options.ApiKey);
-            request.Headers.Add("x-rapidapi-host", _options.ApiHost);
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-API-Key", _options.ApiKey);
 
             var response = await _httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<JSearchResponse>(
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, ct);
+            var content = await response.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
 
-            return result?.Data ?? [];
+            List<JSearchJob>? jobs = null;
+            string? nextCursor = null;
+
+            // Try v2 format: data.jobs + data.cursor
+            if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
+            {
+                if (data.TryGetProperty("jobs", out var jobsElement) && jobsElement.ValueKind == JsonValueKind.Array)
+                {
+                    jobs = JsonSerializer.Deserialize<List<JSearchJob>>(jobsElement.GetRawText());
+                }
+                if (data.TryGetProperty("cursor", out var cursorElement))
+                {
+                    nextCursor = cursorElement.GetString();
+                }
+            }
+            // Fallback to v1 format: data[] (direct array)
+            else if (root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+            {
+                jobs = JsonSerializer.Deserialize<List<JSearchJob>>(dataArray.GetRawText());
+            }
+
+            return (jobs ?? [], nextCursor);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "JSearch API request failed for query '{Query}' page {Page}", query, page);
-            return [];
+            _logger.LogError(ex, "JSearch API request failed for query '{Query}' cursor '{Cursor}'",
+                query, cursor);
+            return ([], null);
         }
     }
 
@@ -111,15 +157,50 @@ public class JSearchJobService : IJSearchJobService
     {
         return new Job
         {
-            Title = Truncate(source.JobTitle, 100),
-            Description = Truncate(source.JobDescription, 1000),
-            CompanyName = Truncate(source.EmployerName, 100),
+            Title = Truncate(source.JobTitle, 200),
+            Description = source.JobDescription,
+            CompanyName = Truncate(source.EmployerName, 200),
+            EmployerLogo = source.EmployerLogo,
+            EmployerWebsite = source.EmployerWebsite,
+            JobPublisher = source.JobPublisher,
             Location = FormatLocation(source),
+            City = source.JobCity,
+            State = source.JobState,
+            Country = source.JobCountry,
+            Latitude = source.JobLatitude,
+            Longitude = source.JobLongitude,
             JobType = MapJobType(source.JobEmploymentType),
             Salary = FormatSalary(source.JobMinSalary, source.JobMaxSalary),
-            ExperienceRequired = MapExperience(source.RequiredExperience),
+            SalaryMin = source.JobMinSalary,
+            SalaryMax = source.JobMaxSalary,
+            SalaryCurrency = "USD",
+            SalaryPeriod = source.JobSalaryPeriod,
+            ExperienceRequired = MapExperience(source.RequiredExperienceYears ?? 0),
+            RequiredExperienceYears = source.RequiredExperienceYears,
+            SeniorityLevel = source.SeniorityLevel,
+            Industry = source.Industry,
+            JobFunction = source.JobFunction,
+            WorkArrangement = source.WorkArrangement,
+            ExternalJobId = source.JobId,
+            ApplyLink = source.JobApplyLink,
+            IsRemote = source.JobIsRemote ?? false,
             IsActive = true,
-            PostedDate = source.JobPostedAt?.ToUniversalTime() ?? DateTime.UtcNow,
+            PostedAtTimestamp = source.JobPostedAtTimestamp,
+            PostedDate = source.JobPostedAtDatetimeUtc?.ToUniversalTime() ?? DateTime.UtcNow,
+            HasManagementResponsibilities = source.HasManagementResponsibilities,
+            IsAiMlInvolved = source.AiMlInvolved,
+            EducationRequired = source.EducationRequired,
+            ContractDuration = source.ContractDuration,
+            RequiredTechnologies = source.RequiredTechnologies ?? [],
+            PreferredTechnologies = source.PreferredTechnologies ?? [],
+            SoftSkills = source.SoftSkills ?? [],
+            Benefits = source.JobBenefits ?? [],
+            Methodologies = source.Methodologies ?? [],
+            HighlightsQualifications = FormatHighlights(source.JobHighlights?.Qualifications),
+            HighlightsResponsibilities = FormatHighlights(source.JobHighlights?.Responsibilities),
+            HighlightsBenefits = FormatHighlights(source.JobHighlights?.Benefits),
+            Source = "JSearch",
+            SourceUrl = source.JobApplyLink,
             EmployerId = employerId,
             Employer = null!,
         };
@@ -127,6 +208,9 @@ public class JSearchJobService : IJSearchJobService
 
     private static string FormatLocation(JSearchJob job)
     {
+        if (!string.IsNullOrEmpty(job.JobLocation))
+            return job.JobLocation;
+
         var parts = new[] { job.JobCity, job.JobState, job.JobCountry };
         return string.Join(", ", parts.Where(p => !string.IsNullOrEmpty(p)));
     }
@@ -152,19 +236,23 @@ public class JSearchJobService : IJSearchJobService
         return $"${min:F0} - ${max:F0}/year";
     }
 
-    private static string MapExperience(JSearchExperience? exp)
+    private static string MapExperience(int? years)
     {
-        if (exp?.RequiredExperienceInMonths == null) return "Not specified";
-        var months = exp.RequiredExperienceInMonths.Value;
-        return months switch
+        if (years == null || years <= 0) return "Not specified";
+        return years switch
         {
-            <= 0 => "Entry Level",
-            <= 12 => "1 year",
-            <= 24 => "1-2 years",
-            <= 36 => "2-3 years",
-            <= 60 => "3-5 years",
+            <= 1 => "Entry Level",
+            <= 2 => "1-2 years",
+            <= 3 => "2-3 years",
+            <= 5 => "3-5 years",
             _ => "5+ years",
         };
+    }
+
+    private static string FormatHighlights(List<string>? items)
+    {
+        if (items == null || items.Count == 0) return "";
+        return string.Join("\n", items);
     }
 
     private static string Truncate(string value, int maxLength) =>
