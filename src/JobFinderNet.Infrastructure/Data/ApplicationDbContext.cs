@@ -13,6 +13,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Job> Jobs { get; set; } = null!;
     public DbSet<Application> Applications { get; set; } = null!;
+    public DbSet<UserProfile> UserProfiles { get; set; } = null!;
+    public DbSet<PendingDigest> PendingDigests { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -21,6 +23,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>().ToTable("users");
         builder.Entity<Job>().ToTable("jobs");
         builder.Entity<Application>().ToTable("applications");
+        builder.Entity<UserProfile>().ToTable("user_profiles");
+        builder.Entity<PendingDigest>().ToTable("pending_digests");
 
         builder.Entity<Job>()
             .Property(j => j.Title)
@@ -62,5 +66,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(a => a.ApplicantId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<UserProfile>()
+            .HasIndex(u => u.UserId)
+            .IsUnique();
+
+        builder.Entity<UserProfile>()
+            .Property(u => u.Skills)
+            .HasColumnType("jsonb");
+
+        builder.Entity<PendingDigest>()
+            .HasOne(d => d.Job)
+            .WithMany()
+            .HasForeignKey(d => d.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PendingDigest>()
+            .HasIndex(d => new { d.UserId, d.EmailFrequency });
     }
 }
