@@ -2,12 +2,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Distributed;
 using JobFinderNet.Core.Interfaces.Services;
+using StackExchange.Redis;
 
 namespace JobFinderNet.Infrastructure.Services;
 
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
+    private readonly ConnectionMultiplexer _redis;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -15,9 +17,10 @@ public class RedisCacheService : ICacheService
         ReferenceHandler = ReferenceHandler.IgnoreCycles,
     };
 
-    public RedisCacheService(IDistributedCache cache)
+    public RedisCacheService(IDistributedCache cache, ConnectionMultiplexer redis)
     {
         _cache = cache;
+        _redis = redis;
     }
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
@@ -41,10 +44,17 @@ public class RedisCacheService : ICacheService
         return _cache.RemoveAsync(key, ct);
     }
 
-    public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
+    public async Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
     {
-        // Full prefix-based flush would need direct StackExchange.Redis SCAN + DEL.
-        // For now keys are invalidated individually in the calling code.
-        return Task.CompletedTask;
+        var server = _redis.GetServer(_redis.GetEndPoints()[0]);
+        var keys = server.Keys(pattern: $"JobFinderNet:{prefix}*")
+            .Select(k => k.ToString().Replace("JobFinderNet:", ""))
+            .ToArray();
+
+        if (keys.Length == 0) return;
+
+        var db = _redis.GetDatabase();
+        var redisKeys = keys.Select(k => (RedisKey)k).ToArray();
+        await db.KeyDeleteAsync(redisKeys);
     }
 }

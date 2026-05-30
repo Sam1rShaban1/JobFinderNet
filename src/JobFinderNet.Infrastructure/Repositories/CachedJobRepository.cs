@@ -9,9 +9,9 @@ public class CachedJobRepository : IJobRepository
 {
     private readonly IJobRepository _inner;
     private readonly ICacheService _cache;
-    private static readonly TimeSpan ListCacheDuration = TimeSpan.FromMinutes(2);
-    private static readonly TimeSpan DetailCacheDuration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan ListCacheDuration = TimeSpan.FromHours(1);
+    private static readonly TimeSpan DetailCacheDuration = TimeSpan.FromHours(2);
+    private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromMinutes(30);
     private const string JobsPrefix = "jobs:";
 
     public CachedJobRepository(IJobRepository inner, ICacheService cache)
@@ -135,14 +135,6 @@ public class CachedJobRepository : IJobRepository
 
     private async Task InvalidateJobListsAsync()
     {
-        // Remove known list cache keys by their full keys.
-        // A more robust approach would use Redis SCAN + DEL via StackExchange.Raw,
-        // but this covers the common paths without extra dependencies.
-        var keysToRemove = new[]
-        {
-            $"{JobsPrefix}active:count",
-        };
-        foreach (var key in keysToRemove)
-            await _cache.RemoveAsync(key);
+        await _cache.RemoveByPrefixAsync(JobsPrefix);
     }
 }
