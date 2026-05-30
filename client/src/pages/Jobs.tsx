@@ -15,6 +15,13 @@ interface Job {
   isActive: boolean
 }
 
+function formatSalaryText(salary: string): string {
+  return salary.replace(/\$(\d+)\s*-\s*\$(\d+)/g, (_, a, b) => {
+    const fmt = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`
+    return `${fmt(+a)} - ${fmt(+b)}`
+  })
+}
+
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [search, setSearch] = useState('')
@@ -27,7 +34,7 @@ export default function Jobs() {
       try {
         const url = search
           ? `/jobs/search?query=${search}`
-          : `/jobs?page=${page}&pageSize=10`
+          : `/jobs?page=${page}&pageSize=12`
         const res = await api.get(url)
         if (search) {
           setJobs(res.data)
@@ -71,8 +78,8 @@ export default function Jobs() {
               <p className="company">{job.companyName}</p>
               <p className="meta">
                 <span>{job.location}</span>
-                <span>{job.salary}</span>
-                <span>{job.experienceRequired}</span>
+                <span>{formatSalaryText(job.salary)}</span>
+                {job.experienceRequired !== 'Not specified' && <span>{job.experienceRequired}</span>}
               </p>
               <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
             </div>

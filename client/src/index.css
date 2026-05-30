@@ -759,25 +759,132 @@ h4, .h4 {
   color: var(--ink);
 }
 
-.detail-description {
+.detail-section {
   margin-bottom: var(--space-xxl);
 }
 
-.detail-description h3 {
-  font-size: 24px;
+.detail-section h3 {
+  font-size: 20px;
   margin-bottom: var(--space-lg);
+  color: var(--primary);
 }
 
-.detail-description p {
-  font-size: 16px;
+/* ---- Tag Chips ---- */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: var(--pale-blue);
+  color: var(--action-blue);
+}
+
+.tag-outline {
+  background: transparent;
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+}
+
+.tag-soft {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tag-benefit {
+  background: var(--pale-green);
+  color: var(--deep-green);
+}
+
+/* ---- Description Formatting ---- */
+.job-description {
+  background: var(--soft-stone);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xl) var(--space-xl);
+}
+
+.job-description p {
+  font-size: 15px;
   line-height: 1.7;
   color: var(--body-muted);
+}
+
+.desc-paragraph {
+  margin-bottom: var(--space-md);
+}
+
+.desc-bullet {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: var(--space-sm);
+}
+
+.desc-bullet::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--primary);
+}
+
+.desc-numbered {
+  padding-left: 24px;
+  margin-bottom: var(--space-sm);
+}
+
+.desc-label {
+  font-weight: 600;
+  color: var(--ink) !important;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
 }
 
 .detail-actions {
   display: flex;
   gap: var(--space-lg);
   align-items: center;
+}
+
+/* ---- Confirm Prompt ---- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.confirm-card {
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xxl);
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.confirm-card h3 {
+  margin-bottom: var(--space-md);
+}
+
+.confirm-card p {
+  color: var(--body-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
 }
 
 /* ---- Dark Apply Band ---- */

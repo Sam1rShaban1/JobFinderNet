@@ -22,7 +22,11 @@ export default function Navbar() {
         <div className="nav-auth">
           {isSignedIn ? (
             <div className="nav-user">
-              <span className="nav-email">{clerkUser?.username || clerkUser?.primaryEmailAddress?.emailAddress}</span>
+              <span className="nav-email">
+                {[clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ') ||
+                 clerkUser?.username ||
+                 clerkUser?.primaryEmailAddress?.emailAddress}
+              </span>
               {appUser && <span className={`badge role-${appUser.role.toLowerCase()}`}>{appUser.role}</span>}
               <UserButton afterSignOutUrl="/" />
             </div>
