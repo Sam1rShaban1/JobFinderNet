@@ -51,10 +51,13 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IMatchingService, MatchingService>();
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddScoped<IEmailService, SmtpEmailSender>();
 builder.Services.AddHostedService<EmailBackgroundService>();
+builder.Services.AddHostedService<JobMatchNotificationService>();
+builder.Services.AddHostedService<DigestSendService>();
 
 // JSearch job sync
 builder.Services.Configure<JSearchOptions>(builder.Configuration.GetSection(JSearchOptions.SectionName));
