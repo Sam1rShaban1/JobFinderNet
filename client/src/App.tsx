@@ -6,6 +6,7 @@ import Jobs from './pages/Jobs'
 import JobDetails from './pages/JobDetails'
 import CreateJob from './pages/CreateJob'
 import MyApplications from './pages/MyApplications'
+import Suggestions from './pages/Suggestions'
 
 function Home() {
   const { isSignedIn } = useUser()
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/create-job" element={
             <ProtectedRoute><CreateJob /></ProtectedRoute>
           } />

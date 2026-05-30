@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
 
@@ -13,6 +14,11 @@ interface Job {
   experienceRequired: string
   postedDate: string
   isActive: boolean
+  isRemote?: boolean
+}
+
+interface MatchedJob extends Job {
+  score: number
 }
 
 function formatSalaryText(salary: string): string {
@@ -22,12 +28,32 @@ function formatSalaryText(salary: string): string {
   })
 }
 
+function ScoreBadge({ score }: { score: number }) {
+  const color = score >= 80 ? 'var(--deep-green)' : score >= 60 ? 'var(--action-blue)' : 'var(--body-muted)'
+  const bg = score >= 80 ? 'var(--pale-green)' : score >= 60 ? 'var(--pale-blue)' : 'var(--soft-stone)'
+  return (
+    <span style={{
+      display: 'inline-flex',
+      padding: '2px 10px',
+      borderRadius: 9999,
+      fontSize: 12,
+      fontWeight: 600,
+      color,
+      background: bg,
+    }}>
+      {score}% match
+    </span>
+  )
+}
+
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([])
+  const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([])
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const { user } = useAppUser()
+  const { isSignedIn } = useAuth()
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -49,6 +75,22 @@ export default function Jobs() {
     fetchJobs()
   }, [page, search])
 
+  useEffect(() => {
+    if (!isSignedIn) {
+      setMatchedJobs([])
+      return
+    }
+    const fetchMatched = async () => {
+      try {
+        const res = await api.get('/profile/matched?limit=6')
+        setMatchedJobs(res.data)
+      } catch {
+        // not critical
+      }
+    }
+    fetchMatched()
+  }, [isSignedIn])
+
   return (
     <div className="container">
       <div className="jobs-header">
@@ -66,6 +108,32 @@ export default function Jobs() {
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
         />
       </div>
+
+      {matchedJobs.length > 0 && (
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Matched for You</h2>
+          <div className="job-grid">
+            {matchedJobs.map((job) => (
+              <div key={`matched-${job.id}`} className="job-card">
+                <div className="job-card-header">
+                  <h3>{job.title}</h3>
+                  <ScoreBadge score={job.score} />
+                </div>
+                <div className="job-card-body">
+                  <p className="company">{job.companyName}</p>
+                  <p className="meta">
+                    <span>{job.location}</span>
+                    <span>{formatSalaryText(job.salary)}</span>
+                    {job.experienceRequired !== 'Not specified' && <span>{job.experienceRequired}</span>}
+                  </p>
+                  <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                </div>
+                <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="job-grid">
         {jobs.map((job) => (
