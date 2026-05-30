@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Interfaces.Repositories;
+using JobFinderNet.Core.Interfaces.Services;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -31,7 +32,7 @@ public class JobsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult> GetJobs([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
     {
         var jobs = await _jobRepository.GetPaginatedJobsAsync(page, pageSize);
         return Ok(new
@@ -69,7 +70,7 @@ public class JobsController : ControllerBase
     [Authorize(Roles = "Employer,Admin")]
     public async Task<ActionResult<Job>> CreateJob(CreateJobDto dto)
     {
-        var employerId = User.FindFirstValue("sub") 
+        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
             ?? throw new InvalidOperationException("User ID not found");
 
         var employer = await _userManager.FindByIdAsync(employerId);
@@ -112,7 +113,7 @@ public class JobsController : ControllerBase
     [Authorize(Roles = "Employer")]
     public async Task<ActionResult> GetEmployerJobs()
     {
-        var employerId = User.FindFirstValue("sub")!;
+        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var jobs = await _jobRepository.GetEmployerJobsAsync(employerId);
         return Ok(jobs);
     }
@@ -123,5 +124,13 @@ public class JobsController : ControllerBase
     {
         var apps = await _applicationRepository.GetJobApplications(jobId);
         return Ok(apps);
+    }
+
+    [HttpPost("sync")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> SyncJobs([FromServices] IJSearchJobService jSearch)
+    {
+        var count = await jSearch.SyncJobsAsync();
+        return Ok(new { added = count, message = $"Synced {count} new jobs from JSearch" });
     }
 }

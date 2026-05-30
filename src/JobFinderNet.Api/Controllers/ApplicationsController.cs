@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -32,12 +33,14 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpPost("{jobId}")]
-    [Authorize(Roles = "Applicant")]
     public async Task<ActionResult> Apply(int jobId)
     {
-        var userId = User.FindFirstValue("sub")!;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null) return Unauthorized();
+
+        if (!await _userManager.IsInRoleAsync(user, "Applicant"))
+            return Forbid();
 
         var job = await _jobRepository.GetByIdAsync(jobId);
         if (job == null || !job.IsActive)
@@ -57,6 +60,8 @@ public class ApplicationsController : ControllerBase
             AppliedDate = DateTime.UtcNow
         };
 
+        _context.Entry(job).State = EntityState.Unchanged;
+        _context.Entry(user).State = EntityState.Unchanged;
         var success = await _applicationRepository.AddAsync(application);
         if (!success)
             return BadRequest(new { message = "Failed to submit application" });
@@ -67,7 +72,7 @@ public class ApplicationsController : ControllerBase
     [HttpGet("my")]
     public async Task<ActionResult> MyApplications()
     {
-        var userId = User.FindFirstValue("sub")!;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var applications = await _applicationRepository.GetUserApplicationsAsync(userId);
         return Ok(applications);
     }

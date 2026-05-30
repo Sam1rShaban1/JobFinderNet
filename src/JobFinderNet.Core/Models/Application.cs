@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace JobFinderNet.Core.Models;
 
 public class Application
 {
     public int Id { get; set; }
     public DateTime AppliedDate { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Pending;
 
     public required int JobId { get; set; }

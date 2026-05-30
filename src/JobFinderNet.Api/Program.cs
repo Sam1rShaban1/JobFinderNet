@@ -13,6 +13,8 @@ using JobFinderNet.Infrastructure.Repositories;
 using JobFinderNet.Infrastructure.Services;
 using JobFinderNet.Api.Middleware;
 using Scalar.AspNetCore;
+using System.Security.Claims;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +34,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = redisConnection;
     options.InstanceName = "JobFinderNet:";
 });
+
+builder.Services.AddSingleton(sp =>
+    ConnectionMultiplexer.Connect(redisConnection));
 
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IJobRepository>(sp =>
@@ -118,23 +123,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     var userManager = context.HttpContext.RequestServices
                         .GetRequiredService<UserManager<ApplicationUser>>();
-                    var sub = context.Principal?.FindFirst("sub")?.Value;
+                    var sub = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (sub == null) return;
 
-                    if (await userManager.FindByIdAsync(sub) != null) return;
+                    var appUser = await userManager.FindByIdAsync(sub);
+                    if (appUser == null)
+                    {
+                        var email = context.Principal?.FindFirst("email")?.Value ?? $"{sub}@clerk.dev";
+                        appUser = new ApplicationUser
+                        {
+                            Id = sub,
+                            UserName = email,
+                            Email = email,
+                            EmailConfirmed = true,
+                        };
+                        var result = await userManager.CreateAsync(appUser);
+                        if (result.Succeeded)
+                        {
+                            await userManager.AddToRoleAsync(appUser, "Applicant");
+                        }
+                    }
 
-                    var email = context.Principal?.FindFirst("email")?.Value ?? $"{sub}@clerk.dev";
-                    var user = new ApplicationUser
+                    var roles = await userManager.GetRolesAsync(appUser);
+                    var identity = context.Principal?.Identity as ClaimsIdentity;
+                    if (identity != null)
                     {
-                        Id = sub,
-                        UserName = email,
-                        Email = email,
-                        EmailConfirmed = true,
-                    };
-                    var result = await userManager.CreateAsync(user);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(user, "Applicant");
+                        foreach (var role in roles)
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                        }
                     }
                 }
                 catch
@@ -209,14 +226,6 @@ try
         await context.Database.MigrateAsync();
         await RoleInitializer.Initialize(services);
         await DataSeeder.SeedData(services);
-
-        // Sync JSearch jobs on startup in non-development
-        if (!app.Environment.IsDevelopment())
-        {
-            var jSearch = services.GetRequiredService<IJSearchJobService>();
-            var added = await jSearch.SyncJobsAsync();
-            logger.LogInformation("JSearch startup sync added {Count} jobs", added);
-        }
 
         logger.LogInformation("Database initialization completed");
     }
