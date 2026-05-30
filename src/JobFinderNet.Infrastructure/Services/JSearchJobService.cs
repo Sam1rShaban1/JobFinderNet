@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
@@ -85,11 +87,18 @@ public class JSearchJobService : IJSearchJobService
                 {
                     if (string.IsNullOrEmpty(jSearchJob.JobId)) continue;
 
-                    var exists = await context.Jobs.AnyAsync(j => j.ExternalJobId == jSearchJob.JobId, ct);
-                    if (exists) continue;
-
-                    context.Jobs.Add(MapToJob(jSearchJob, systemEmployerId));
-                    totalAdded++;
+                    var existing = await context.Jobs.FirstOrDefaultAsync(j => j.ExternalJobId == jSearchJob.JobId, ct);
+                    if (existing == null)
+                    {
+                        context.Jobs.Add(MapToJob(jSearchJob, systemEmployerId));
+                        totalAdded++;
+                    }
+                    else if (existing.RequiredTechnologies.Count == 0 && existing.PreferredTechnologies.Count == 0)
+                    {
+                        var (required, preferred) = ExtractTechnologies($"{jSearchJob.JobTitle} {jSearchJob.JobDescription}");
+                        existing.RequiredTechnologies = required;
+                        existing.PreferredTechnologies = preferred;
+                    }
                 }
 
                 await context.SaveChangesAsync(ct);
@@ -125,7 +134,6 @@ public class JSearchJobService : IJSearchJobService
             List<JSearchJob>? jobs = null;
             string? nextCursor = null;
 
-            // Try v2 format: data.jobs + data.cursor
             if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
             {
                 if (data.TryGetProperty("jobs", out var jobsElement) && jobsElement.ValueKind == JsonValueKind.Array)
@@ -137,7 +145,6 @@ public class JSearchJobService : IJSearchJobService
                     nextCursor = cursorElement.GetString();
                 }
             }
-            // Fallback to v1 format: data[] (direct array)
             else if (root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
             {
                 jobs = JsonSerializer.Deserialize<List<JSearchJob>>(dataArray.GetRawText());
@@ -155,6 +162,16 @@ public class JSearchJobService : IJSearchJobService
 
     private static Job MapToJob(JSearchJob source, string employerId)
     {
+        var requiredTechs = source.RequiredTechnologies ?? [];
+        var preferredTechs = source.PreferredTechnologies ?? [];
+
+        if (requiredTechs.Count == 0 && preferredTechs.Count == 0)
+        {
+            var text = $"{source.JobTitle} {source.JobDescription}";
+            var (extracted, _) = ExtractTechnologies(text);
+            requiredTechs = extracted;
+        }
+
         return new Job
         {
             Title = Truncate(source.JobTitle, 200),
@@ -191,8 +208,8 @@ public class JSearchJobService : IJSearchJobService
             IsAiMlInvolved = source.AiMlInvolved,
             EducationRequired = source.EducationRequired,
             ContractDuration = source.ContractDuration,
-            RequiredTechnologies = source.RequiredTechnologies ?? [],
-            PreferredTechnologies = source.PreferredTechnologies ?? [],
+            RequiredTechnologies = requiredTechs,
+            PreferredTechnologies = preferredTechs,
             SoftSkills = source.SoftSkills ?? [],
             Benefits = source.JobBenefits ?? [],
             Methodologies = source.Methodologies ?? [],
@@ -204,6 +221,100 @@ public class JSearchJobService : IJSearchJobService
             EmployerId = employerId,
             Employer = null!,
         };
+    }
+
+    private static readonly List<(string Pattern, string Display)> TechPatterns =
+    [
+        // Languages
+        ("javascript", "JavaScript"), ("typescript", "TypeScript"), ("python", "Python"),
+        ("\\bjava\\b", "Java"), ("csharp", "C#"), ("\\bc#\\b", "C#"), ("\\bgo\\b", "Go"),
+        ("golang", "Go"), ("\\brust\\b", "Rust"), ("kotlin", "Kotlin"), ("\\bswift\\b", "Swift"),
+        ("\\bruby\\b", "Ruby"), ("\\bphp\\b", "PHP"), ("\\bc\\+\\+", "C++"), ("cpp", "C++"),
+        ("scala", "Scala"), ("\\bdart\\b", "Dart"), ("elixir", "Elixir"), ("haskell", "Haskell"),
+        ("perl", "Perl"), ("solidity", "Solidity"),
+        // Frontend
+        ("\\breact\\b", "React"), ("reactjs", "React"), ("vue\\.?js", "Vue.js"),
+        ("\\bvue\\b", "Vue.js"), ("angular", "Angular"), ("svelte", "Svelte"),
+        ("next\\.?js", "Next.js"), ("nuxt", "Nuxt.js"), ("remix", "Remix"), ("astro", "Astro"),
+        ("\\bhtml\\b", "HTML"), ("\\bcss\\b", "CSS"), ("scss", "SCSS"), ("sass", "Sass"),
+        ("tailwind", "Tailwind CSS"), ("bootstrap", "Bootstrap"),
+        ("material ?ui", "Material UI"), ("chakra", "Chakra UI"),
+        ("redux", "Redux"), ("zustand", "Zustand"),
+        // Backend
+        ("node\\.?js", "Node.js"), ("deno", "Deno"), ("express", "Express.js"),
+        ("fastify", "Fastify"), ("nestjs", "NestJS"), ("spring ?boot", "Spring Boot"),
+        ("\\bspring\\b", "Spring Boot"), ("django", "Django"), ("flask", "Flask"),
+        ("fastapi", "FastAPI"), ("rails", "Ruby on Rails"),
+        ("asp\\.?net", "ASP.NET Core"), ("laravel", "Laravel"), ("symfony", "Symfony"),
+        ("graphql", "GraphQL"), ("rest api", "REST API"), ("\\bgrpc\\b", "gRPC"),
+        ("websocket", "WebSocket"),
+        // Databases
+        ("postgresql", "PostgreSQL"), ("postgres", "PostgreSQL"), ("mysql", "MySQL"),
+        ("sqlite", "SQLite"), ("mongodb", "MongoDB"), ("\\bredis\\b", "Redis"),
+        ("elasticsearch", "Elasticsearch"), ("cassandra", "Cassandra"),
+        ("dynamodb", "DynamoDB"), ("mariadb", "MariaDB"), ("sql server", "SQL Server"),
+        ("oracle", "Oracle"), ("firebase", "Firebase"), ("supabase", "Supabase"),
+        // Cloud & DevOps
+        ("\\baws\\b", "AWS"), ("amazon web services", "AWS"), ("\\bazure\\b", "Azure"),
+        ("\\bgcp\\b", "GCP"), ("google cloud", "GCP"), ("\\bdocker\\b", "Docker"),
+        ("kubernetes", "Kubernetes"), ("k8s", "Kubernetes"),
+        ("terraform", "Terraform"), ("ansible", "Ansible"),
+        ("jenkins", "Jenkins"), ("github actions", "GitHub Actions"),
+        ("gitlab ci", "GitLab CI"), ("circleci", "CircleCI"),
+        ("prometheus", "Prometheus"), ("grafana", "Grafana"),
+        ("datadog", "Datadog"), ("\\bsentry\\b", "Sentry"),
+        ("\\bnginx\\b", "Nginx"), ("serverless", "Serverless"),
+        // Testing
+        ("\\bjest\\b", "Jest"), ("cypress", "Cypress"), ("playwright", "Playwright"),
+        ("selenium", "Selenium"), ("pytest", "Pytest"), ("junit", "JUnit"),
+        // Mobile
+        ("react native", "React Native"), ("flutter", "Flutter"),
+        ("\\bandroid\\b", "Android"), ("\\bios\\b", "iOS"), ("expo", "Expo"),
+        ("swiftui", "SwiftUI"),
+        // Data & AI
+        ("machine learning", "Machine Learning"), ("deep learning", "Deep Learning"),
+        ("tensorflow", "TensorFlow"), ("pytorch", "PyTorch"),
+        ("\\bllm\\b", "LLM"), ("openai", "OpenAI"), ("langchain", "LangChain"),
+        ("\\brag\\b", "RAG"), ("\\bnlp\\b", "NLP"), ("computer vision", "Computer Vision"),
+        ("data science", "Data Science"), ("data engineering", "Data Engineering"),
+        ("apache spark", "Apache Spark"), ("\\bspark\\b", "Apache Spark"),
+        ("kafka", "Kafka"), ("airflow", "Airflow"), ("\\bdbt\\b", "dbt"),
+        ("snowflake", "Snowflake"), ("databricks", "Databricks"),
+        ("bigquery", "BigQuery"), ("tableau", "Tableau"), ("power bi", "Power BI"),
+        // Tools
+        ("\\bgit\\b", "Git"), ("\\blinux\\b", "Linux"), ("\\bbash\\b", "Bash"),
+        ("webpack", "Webpack"), ("\\bvite\\b", "Vite"),
+        // Game Dev
+        ("unity", "Unity"), ("unreal engine", "Unreal Engine"), ("godot", "Godot"),
+        ("three\\.?js", "Three.js"), ("webgl", "WebGL"),
+        // Methodologies / Architecture
+        ("microservices", "Microservices"), ("oauth", "OAuth"), ("\\bjwt\\b", "JWT"),
+        ("saml", "SAML"),
+    ];
+
+    private static readonly Regex WordSplitter = new(@"[\s,;:.!?()\[\]{}/\\""'@#$%^&*+=<>|`~–—]+", RegexOptions.Compiled);
+
+    public static (List<string> Required, List<string> Preferred) ExtractTechnologies(string text)
+    {
+        var required = new List<string>();
+        if (string.IsNullOrWhiteSpace(text)) return (required, []);
+
+        var lower = text.ToLowerInvariant();
+        var found = new HashSet<string>();
+
+        foreach (var (pattern, display) in TechPatterns)
+        {
+            if (found.Contains(display)) continue;
+
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            if (regex.IsMatch(lower))
+            {
+                found.Add(display);
+                required.Add(display);
+            }
+        }
+
+        return (required, []);
     }
 
     private static string FormatLocation(JSearchJob job)

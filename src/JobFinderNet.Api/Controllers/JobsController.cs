@@ -2,10 +2,13 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
+using JobFinderNet.Infrastructure.Services;
+using JobFinderNet.Infrastructure.Data;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -17,17 +20,20 @@ public class JobsController : ControllerBase
     private readonly IApplicationRepository _applicationRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<JobsController> _logger;
+    private readonly ApplicationDbContext _context;
 
     public JobsController(
         IJobRepository jobRepository,
         IApplicationRepository applicationRepository,
         UserManager<ApplicationUser> userManager,
-        ILogger<JobsController> logger)
+        ILogger<JobsController> logger,
+        ApplicationDbContext context)
     {
         _jobRepository = jobRepository;
         _applicationRepository = applicationRepository;
         _userManager = userManager;
         _logger = logger;
+        _context = context;
     }
 
     [HttpGet]
@@ -124,6 +130,25 @@ public class JobsController : ControllerBase
     {
         var apps = await _applicationRepository.GetJobApplications(jobId);
         return Ok(apps);
+    }
+
+    [HttpPost("populate-techs")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> PopulateTechnologies()
+    {
+        var jobs = await _context.Jobs
+            .Where(j => j.RequiredTechnologies.Count == 0 && j.PreferredTechnologies.Count == 0)
+            .ToListAsync();
+
+        foreach (var job in jobs)
+        {
+            var (required, preferred) = JSearchJobService.ExtractTechnologies($"{job.Title} {job.Description}");
+            job.RequiredTechnologies = required;
+            job.PreferredTechnologies = preferred;
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(new { updated = jobs.Count, message = $"Populated technologies for {jobs.Count} jobs" });
     }
 
     [HttpPost("sync")]
