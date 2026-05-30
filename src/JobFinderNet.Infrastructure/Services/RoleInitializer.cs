@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using JobFinderNet.Core.Models;
-using JobFinderNet.Infrastructure.Factories;
 
 namespace JobFinderNet.Infrastructure.Services;
 
@@ -26,7 +25,13 @@ public class RoleInitializer
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
-            adminUser = UserFactory.CreateEmployer(adminEmail, "JobFinder Admin");
+            adminUser = new ApplicationUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                EmailConfirmed = true,
+                CompanyName = "JobFinder Admin"
+            };
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
@@ -38,7 +43,13 @@ public class RoleInitializer
         var employerUser = await userManager.FindByEmailAsync(employerEmail);
         if (employerUser == null)
         {
-            employerUser = UserFactory.CreateEmployer(employerEmail, "Demo Company");
+            employerUser = new ApplicationUser
+            {
+                UserName = employerEmail,
+                Email = employerEmail,
+                EmailConfirmed = true,
+                CompanyName = "Demo Company"
+            };
             var result = await userManager.CreateAsync(employerUser, "Employer123!");
             if (result.Succeeded)
             {
@@ -50,7 +61,14 @@ public class RoleInitializer
         var applicantUser = await userManager.FindByEmailAsync(applicantEmail);
         if (applicantUser == null)
         {
-            applicantUser = UserFactory.CreateApplicant(applicantEmail);
+            applicantUser = new ApplicationUser
+            {
+                UserName = applicantEmail,
+                Email = applicantEmail,
+                EmailConfirmed = true,
+                FirstName = "Test",
+                LastName = "Applicant"
+            };
             var result = await userManager.CreateAsync(applicantUser, "Applicant123!");
             if (result.Succeeded)
             {

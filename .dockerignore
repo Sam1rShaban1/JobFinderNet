@@ -1,0 +1,14 @@
+bin/
+**/bin/
+obj/
+**/obj/
+node_modules/
+**/node_modules/
+client/dist/
+.git/
+.gitignore
+.env
+*.secret.*
+*.md
+*.log
+

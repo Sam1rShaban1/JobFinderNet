@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.RateLimiting;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
@@ -48,6 +50,39 @@ builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOpt
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddScoped<IEmailService, SmtpEmailSender>();
 builder.Services.AddHostedService<EmailBackgroundService>();
+
+// JSearch job sync
+builder.Services.Configure<JSearchOptions>(builder.Configuration.GetSection(JSearchOptions.SectionName));
+builder.Services.AddHttpClient<IJSearchJobService, JSearchJobService>();
+
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+    options.AddFixedWindowLimiter("api", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+});
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins("https://jobfindernet.azurewebsites.net")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
+});
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -128,6 +163,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseRateLimiter();
+app.UseCors();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -140,6 +178,21 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Health checks
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" }));
+app.MapGet("/api/ready", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "ready" });
+    }
+    catch
+    {
+        return Results.StatusCode(503);
+    }
+});
 
 app.MapFallbackToFile("index.html");
 
@@ -157,13 +210,21 @@ try
         await RoleInitializer.Initialize(services);
         await DataSeeder.SeedData(services);
 
+        // Sync JSearch jobs on startup in non-development
+        if (!app.Environment.IsDevelopment())
+        {
+            var jSearch = services.GetRequiredService<IJSearchJobService>();
+            var added = await jSearch.SyncJobsAsync();
+            logger.LogInformation("JSearch startup sync added {Count} jobs", added);
+        }
+
         logger.LogInformation("Database initialization completed");
     }
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred while seeding the database.");
+    logger.LogError(ex, "An error occurred while initializing the application.");
 }
 
 app.Run();

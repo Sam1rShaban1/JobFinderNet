@@ -1,0 +1,24 @@
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+    restart: always
+
+  client:
+    build:
+      target: production
+    restart: always
+
+  nginx:
+    environment:
+      CLIENT_PORT: "80"
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+
+  postgres:
+    restart: always
+
+  redis:
+    restart: always
