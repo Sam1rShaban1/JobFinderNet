@@ -53,8 +53,15 @@ public class CreateJobDto
     [Required]
     public string CompanyName { get; set; } = string.Empty;
 
+    public string? EmployerLogo { get; set; }
+    public string? EmployerWebsite { get; set; }
+
     [Required]
     public string Location { get; set; } = string.Empty;
+
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Country { get; set; }
 
     [Required]
     public string JobType { get; set; } = "Full-time";
@@ -62,8 +69,31 @@ public class CreateJobDto
     [Required]
     public string Salary { get; set; } = string.Empty;
 
+    public double? SalaryMin { get; set; }
+    public double? SalaryMax { get; set; }
+    public string? SalaryCurrency { get; set; }
+    public string? SalaryPeriod { get; set; }
+
     [Required]
     public string ExperienceRequired { get; set; } = "Entry Level";
+
+    public int? RequiredExperienceYears { get; set; }
+    public string? SeniorityLevel { get; set; }
+    public string? Industry { get; set; }
+    public string? JobFunction { get; set; }
+    public string? WorkArrangement { get; set; }
+    public string? ApplyLink { get; set; }
+    public bool IsRemote { get; set; }
+    public string? EducationRequired { get; set; }
+    public string? ContractDuration { get; set; }
+    public List<string> RequiredTechnologies { get; set; } = [];
+    public List<string> PreferredTechnologies { get; set; } = [];
+    public List<string> SoftSkills { get; set; } = [];
+    public List<string> Benefits { get; set; } = [];
+    public List<string> Methodologies { get; set; } = [];
+    public string? HighlightsQualifications { get; set; }
+    public string? HighlightsResponsibilities { get; set; }
+    public string? HighlightsBenefits { get; set; }
 }
 
 public class UpdateApplicationStatusDto

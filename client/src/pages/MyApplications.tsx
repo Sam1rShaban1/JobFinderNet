@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/axios'
 
 interface Application {
@@ -29,7 +30,7 @@ export default function MyApplications() {
         ) : (
           <div className="applications-list">
             {apps.map((app) => (
-              <div key={app.id} className="application-card">
+              <Link key={app.id} to={`/jobs/${app.jobId}`} className="application-card" style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}>
                 <div className="app-info">
                   <h3>{app.job.title}</h3>
                   <p className="company">{app.job.companyName}</p>
@@ -38,7 +39,7 @@ export default function MyApplications() {
                   </p>
                 </div>
                 <span className={`badge status-${app.status.toLowerCase()}`}>{app.status}</span>
-              </div>
+              </Link>
             ))}
           </div>
         )}
