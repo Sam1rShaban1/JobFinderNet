@@ -658,10 +658,7 @@ h4, .h4 {
 .job-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  background: var(--hairline);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  gap: var(--space-md);
 }
 
 .job-card {

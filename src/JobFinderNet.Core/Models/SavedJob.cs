@@ -7,6 +7,5 @@ public class SavedJob
     public int JobId { get; set; }
     public DateTime SavedDate { get; set; } = DateTime.UtcNow;
 
-    [System.Text.Json.Serialization.JsonIgnore]
     public Job Job { get; set; } = null!;
 }

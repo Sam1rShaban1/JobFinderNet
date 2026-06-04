@@ -199,7 +199,7 @@ public class JobsController : ControllerBase
                 j.RequiredTechnologies.Any(t => job.RequiredTechnologies.Contains(t))
             ))
             .OrderByDescending(j => j.RequiredTechnologies.Count(t => job.RequiredTechnologies.Contains(t)))
-            .Take(4)
+            .Take(6)
             .ToListAsync();
 
         return Ok(similar);
