@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
+import ErrorBoundary from './components/ErrorBoundary'
 import { AppProvider } from './context/AppContext'
 import Jobs from './pages/Jobs'
 import JobDetails from './pages/JobDetails'
 import CreateJob from './pages/CreateJob'
 import MyApplications from './pages/MyApplications'
 import Suggestions from './pages/Suggestions'
+import NotFound from './pages/NotFound'
 
 function Home() {
   const { isSignedIn } = useUser()
@@ -97,20 +99,23 @@ export default function App() {
     <AppProvider>
       <Navbar />
       <main style={{ flex: 1 }}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
-          <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/suggestions" element={<Suggestions />} />
-          <Route path="/create-job" element={
-            <ProtectedRoute><CreateJob /></ProtectedRoute>
-          } />
-          <Route path="/my-applications" element={
-            <ProtectedRoute><MyApplications /></ProtectedRoute>
-          } />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
+            <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<JobDetails />} />
+            <Route path="/suggestions" element={<Suggestions />} />
+            <Route path="/create-job" element={
+              <ProtectedRoute><CreateJob /></ProtectedRoute>
+            } />
+            <Route path="/my-applications" element={
+              <ProtectedRoute><MyApplications /></ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       <footer className="footer">
         <div className="footer-inner">

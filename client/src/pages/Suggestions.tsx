@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@clerk/react'
 import api from '../api/axios'
+import { SkeletonList } from '../components/Skeleton'
 
 interface MatchedJob {
   id: number
@@ -28,16 +29,22 @@ export default function Suggestions() {
   const [jobs, setJobs] = useState<MatchedJob[]>([])
   const [loading, setLoading] = useState(true)
   const [hasProfile, setHasProfile] = useState(true)
+  const [error, setError] = useState('')
 
   const fetchJobs = useCallback(async () => {
     if (!isLoaded || !isSignedIn) return
     setLoading(true)
+    setError('')
     try {
       const res = await api.get('/profile/matched?limit=12')
       setJobs(res.data)
       setHasProfile(true)
-    } catch {
-      setHasProfile(false)
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        setHasProfile(false)
+      } else {
+        setError('Failed to load suggestions.')
+      }
     } finally {
       setLoading(false)
     }
@@ -62,7 +69,18 @@ export default function Suggestions() {
   if (!isLoaded || loading) {
     return (
       <div className="container" style={{ paddingTop: 60 }}>
-        <p style={{ color: '#888' }}>Loading suggestions...</p>
+        <h1 style={{ fontSize: 32, marginBottom: 24 }}>Suggestions</h1>
+        <SkeletonList count={6} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container" style={{ paddingTop: 60 }}>
+        <h1 style={{ fontSize: 32, marginBottom: 16 }}>Suggestions</h1>
+        <p style={{ color: '#616161', marginBottom: 24 }}>{error}</p>
+        <button className="btn btn-outline" onClick={() => fetchJobs()}>Retry</button>
       </div>
     )
   }

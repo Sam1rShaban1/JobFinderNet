@@ -1123,6 +1123,105 @@ h4, .h4 {
   height: 18px;
 }
 
+/* ---- Active Nav Link ---- */
+.nav-link.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ---- Hamburger Menu ---- */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 110;
+}
+
+.hamburger-line {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.hamburger-line.open:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-line.open:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-line.open:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 90;
+}
+
+.nav-mobile-auth {
+  display: none;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--hairline);
+  margin-top: auto;
+}
+
+/* ---- Skeleton Loading ---- */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton-card {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  background: var(--canvas);
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--soft-stone) 25%, var(--hairline) 50%, var(--soft-stone) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 75%;
+}
+
+.skeleton-text {
+  width: 100%;
+}
+
+.skeleton-text.short {
+  width: 55%;
+}
+
+.skeleton-meta {
+  width: 40%;
+  height: 12px;
+  margin-bottom: 0;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
   h1, .h1, .hero-section h1, .jobs-header h1, .detail-header h1, .applications-page h1 {
@@ -1147,9 +1246,50 @@ h4, .h4 {
     font-size: 28px;
   }
 
-  .nav-links {
-    display: none;
+  .hamburger {
+    display: flex;
   }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 80vw;
+    background: var(--canvas);
+    flex-direction: column;
+    padding: 80px var(--space-xl) var(--space-xl);
+    gap: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+    display: flex;
+  }
+
+  .nav-links--open {
+    transform: translateX(0);
+  }
+
+  .nav-links .nav-link {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--hairline);
+    width: 100%;
+  }
+
+  .nav-links .nav-link.active {
+    border-bottom-color: var(--primary);
+  }
+
+  .nav-overlay {
+    display: block;
+  }
+
+  .nav-mobile-auth {
+    display: flex;
+  }
+
   .nav-email {
     display: none;
   }

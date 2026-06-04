@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useUser } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
+import { SkeletonDetails } from '../components/Skeleton'
 
 interface Job {
   id: number
@@ -85,11 +86,19 @@ export default function JobDetails() {
   const [message, setMessage] = useState('')
   const [showPrompt, setShowPrompt] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [applied, setApplied] = useState(false)
 
   useEffect(() => {
-    api.get(`/jobs/${id}`).then((res) => setJob(res.data)).catch((err) => {
-      console.error('Failed to fetch job:', err.response?.data || err.message)
+    setLoading(true)
+    setError('')
+    api.get(`/jobs/${id}`).then((res) => {
+      setJob(res.data)
+      setLoading(false)
+    }).catch((err) => {
+      setError('Failed to load job details. Please try again.')
+      setLoading(false)
     })
   }, [id])
 
@@ -116,7 +125,25 @@ export default function JobDetails() {
     setShowPrompt(false)
   }
 
-  if (!job) return <div className="container" style={{ paddingTop: 40 }}><p>Loading...</p></div>
+  if (loading) return <SkeletonDetails />
+
+  if (error) {
+    return (
+      <div className="container" style={{ paddingTop: 60, textAlign: 'center' }}>
+        <p style={{ color: '#616161', marginBottom: 16 }}>{error}</p>
+        <Link to="/jobs" className="btn btn-outline">Browse Jobs</Link>
+      </div>
+    )
+  }
+
+  if (!job) {
+    return (
+      <div className="container" style={{ paddingTop: 60, textAlign: 'center' }}>
+        <p style={{ color: '#616161', marginBottom: 16 }}>Job not found.</p>
+        <Link to="/jobs" className="btn btn-outline">Browse Jobs</Link>
+      </div>
+    )
+  }
 
   const descLines = job.description.split('\n')
 

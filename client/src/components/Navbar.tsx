@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useUser, SignInButton, UserButton } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import JobPreferencesForm from './JobPreferencesForm'
@@ -6,21 +7,69 @@ import JobPreferencesForm from './JobPreferencesForm'
 export default function Navbar() {
   const { isSignedIn, user: clerkUser } = useUser()
   const { user: appUser } = useAppUser()
+  const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const isActive = (path: string) => location.pathname === path
+
+  const closeMenu = () => setMenuOpen(false)
 
   return (
     <nav className="navbar">
       <div className="nav-inner">
-        <Link to="/" className="nav-brand">JobFinderNet</Link>
-        <div className="nav-links">
-          <Link to="/jobs" className="nav-link">Jobs</Link>
-          <Link to="/suggestions" className="nav-link">Suggestions</Link>
+        <Link to="/" className="nav-brand" onClick={closeMenu}>JobFinderNet</Link>
+
+        <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+          <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+          <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+          <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+        </button>
+
+        <div className={`nav-links ${menuOpen ? 'nav-links--open' : ''}`}>
+          <Link
+            to="/jobs"
+            className={`nav-link${isActive('/jobs') ? ' active' : ''}`}
+            onClick={closeMenu}
+          >
+            Jobs
+          </Link>
+          <Link
+            to="/suggestions"
+            className={`nav-link${isActive('/suggestions') ? ' active' : ''}`}
+            onClick={closeMenu}
+          >
+            Suggestions
+          </Link>
           {appUser?.role === 'Applicant' && (
-            <Link to="/my-applications" className="nav-link">My Applications</Link>
+            <Link
+              to="/my-applications"
+              className={`nav-link${isActive('/my-applications') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              My Applications
+            </Link>
           )}
           {appUser?.role === 'Employer' && (
-            <Link to="/create-job" className="nav-link">Post Job</Link>
+            <Link
+              to="/create-job"
+              className={`nav-link${isActive('/create-job') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              Post Job
+            </Link>
+          )}
+          {!isSignedIn && (
+            <div className="nav-mobile-auth">
+              <SignInButton mode="redirect">
+                <button className="btn btn-outline btn-sm" onClick={closeMenu}>Sign In</button>
+              </SignInButton>
+              <Link to="/sign-up" className="btn btn-primary btn-sm" onClick={closeMenu}>Register</Link>
+            </div>
           )}
         </div>
+
+        {menuOpen && <div className="nav-overlay" onClick={closeMenu} />}
+
         <div className="nav-auth">
           {isSignedIn ? (
             <div className="nav-user">

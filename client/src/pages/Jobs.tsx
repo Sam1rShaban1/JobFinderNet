@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
+import { SkeletonList } from '../components/Skeleton'
 
 interface Job {
   id: number
@@ -52,11 +53,15 @@ export default function Jobs() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const { user } = useAppUser()
   const { isSignedIn } = useAuth()
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setLoading(true)
+      setError('')
       try {
         const url = search
           ? `/jobs/search?query=${search}`
@@ -69,7 +74,9 @@ export default function Jobs() {
           setTotalPages(res.data.totalPages)
         }
       } catch (err: any) {
-        console.error('Failed to fetch jobs:', err.response?.data || err.message)
+        setError('Failed to load jobs. Please try again.')
+      } finally {
+        setLoading(false)
       }
     }
     fetchJobs()
@@ -109,15 +116,49 @@ export default function Jobs() {
         />
       </div>
 
-      {matchedJobs.length > 0 && (
-        <div style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Matched for You</h2>
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{error}</span>
+          <button className="btn btn-outline btn-sm" onClick={() => setPage(1)}>Retry</button>
+        </div>
+      )}
+
+      {loading ? (
+        <SkeletonList count={6} />
+      ) : (
+        <>
+          {matchedJobs.length > 0 && (
+            <div style={{ marginBottom: 40 }}>
+              <h2 style={{ fontSize: 24, marginBottom: 16 }}>Matched for You</h2>
+              <div className="job-grid">
+                {matchedJobs.map((job) => (
+                  <div key={`matched-${job.id}`} className="job-card">
+                    <div className="job-card-header">
+                      <h3>{job.title}</h3>
+                      <ScoreBadge score={job.score} />
+                    </div>
+                    <div className="job-card-body">
+                      <p className="company">{job.companyName}</p>
+                      <p className="meta">
+                        <span>{job.location}</span>
+                        <span>{formatSalaryText(job.salary)}</span>
+                        {job.experienceRequired !== 'Not specified' && <span>{job.experienceRequired}</span>}
+                      </p>
+                      <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="job-grid">
-            {matchedJobs.map((job) => (
-              <div key={`matched-${job.id}`} className="job-card">
+            {jobs.map((job) => (
+              <div key={job.id} className="job-card">
                 <div className="job-card-header">
                   <h3>{job.title}</h3>
-                  <ScoreBadge score={job.score} />
+                  <span className={`badge ${job.jobType.toLowerCase()}`}>{job.jobType}</span>
                 </div>
                 <div className="job-card-body">
                   <p className="company">{job.companyName}</p>
@@ -131,31 +172,10 @@ export default function Jobs() {
                 <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
               </div>
             ))}
+            {jobs.length === 0 && <p className="no-results">No jobs found.</p>}
           </div>
-        </div>
+        </>
       )}
-
-      <div className="job-grid">
-        {jobs.map((job) => (
-          <div key={job.id} className="job-card">
-            <div className="job-card-header">
-              <h3>{job.title}</h3>
-              <span className={`badge ${job.jobType.toLowerCase()}`}>{job.jobType}</span>
-            </div>
-            <div className="job-card-body">
-              <p className="company">{job.companyName}</p>
-              <p className="meta">
-                <span>{job.location}</span>
-                <span>{formatSalaryText(job.salary)}</span>
-                {job.experienceRequired !== 'Not specified' && <span>{job.experienceRequired}</span>}
-              </p>
-              <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
-            </div>
-            <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
-          </div>
-        ))}
-        {jobs.length === 0 && <p className="no-results">No jobs found.</p>}
-      </div>
 
       {!search && totalPages > 1 && (
         <div className="pagination">
