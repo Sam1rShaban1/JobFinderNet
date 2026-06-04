@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
 import ErrorBoundary from './components/ErrorBoundary'
+import StatsCounter from './components/StatsCounter'
 import { AppProvider } from './context/AppContext'
 import Jobs from './pages/Jobs'
 import JobDetails from './pages/JobDetails'
@@ -55,15 +56,18 @@ function Home() {
       </section>
 
       <div className="container">
+        <StatsCounter />
+
+        <div className="trust-strip">
         <div className="trust-strip">
           <span className="micro">Trusted by leading companies</span>
           <div className="trust-logos">
-            <span className="trust-logo">Stripe</span>
-            <span className="trust-logo">Vercel</span>
-            <span className="trust-logo">Linear</span>
-            <span className="trust-logo">Figma</span>
-            <span className="trust-logo">Notion</span>
-            <span className="trust-logo">Ramp</span>
+            <span className="trust-logo" style={{ fontWeight: 700 }}>Stripe</span>
+            <span className="trust-logo" style={{ fontWeight: 600 }}>Vercel</span>
+            <span className="trust-logo" style={{ fontWeight: 700, letterSpacing: '-0.5px' }}>Linear</span>
+            <span className="trust-logo" style={{ fontWeight: 600 }}>Figma</span>
+            <span className="trust-logo" style={{ fontWeight: 700 }}>Notion</span>
+            <span className="trust-logo" style={{ fontWeight: 600, letterSpacing: '0.5px' }}>Ramp</span>
           </div>
         </div>
 
