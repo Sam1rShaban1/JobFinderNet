@@ -59,7 +59,6 @@ function Home() {
         <StatsCounter />
 
         <div className="trust-strip">
-        <div className="trust-strip">
           <span className="micro">Trusted by leading companies</span>
           <div className="trust-logos">
             <span className="trust-logo" style={{ fontWeight: 700 }}>Stripe</span>
