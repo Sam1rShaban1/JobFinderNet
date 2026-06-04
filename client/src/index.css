@@ -1123,6 +1123,46 @@ h4, .h4 {
   height: 18px;
 }
 
+/* ---- Hero Search ---- */
+.hero-search {
+  display: flex;
+  gap: 0;
+  max-width: 500px;
+  margin: 24px auto 0;
+  border-radius: 48px;
+  overflow: hidden;
+  border: 2px solid var(--hairline);
+  background: var(--canvas);
+}
+.hero-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 14px 20px;
+  font-size: 16px;
+  background: transparent;
+}
+.hero-search .btn {
+  border-radius: 0 46px 46px 0;
+  border: none;
+  padding: 14px 28px;
+}
+
+/* ---- Heart Button ---- */
+.heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--body-muted);
+  transition: color 0.15s, transform 0.15s;
+  line-height: 0;
+}
+.heart-btn:hover {
+  color: var(--coral);
+  transform: scale(1.15);
+}
+
 /* ---- Active Nav Link ---- */
 .nav-link.active {
   color: var(--primary);

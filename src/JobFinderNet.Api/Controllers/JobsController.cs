@@ -184,4 +184,24 @@ public class JobsController : ControllerBase
         var count = await jSearch.SyncJobsAsync();
         return Ok(new { added = count, message = $"Synced {count} new jobs from JSearch" });
     }
+
+    [HttpGet("{id}/similar")]
+    [AllowAnonymous]
+    public async Task<ActionResult> GetSimilarJobs(int id)
+    {
+        var job = await _jobRepository.GetByIdAsync(id);
+        if (job == null) return NotFound();
+
+        var similar = await _context.Jobs
+            .Where(j => j.Id != id && j.IsActive && (
+                (j.Industry != null && j.Industry == job.Industry) ||
+                (j.CompanyName == job.CompanyName) ||
+                j.RequiredTechnologies.Any(t => job.RequiredTechnologies.Contains(t))
+            ))
+            .OrderByDescending(j => j.RequiredTechnologies.Count(t => job.RequiredTechnologies.Contains(t)))
+            .Take(4)
+            .ToListAsync();
+
+        return Ok(similar);
+    }
 }

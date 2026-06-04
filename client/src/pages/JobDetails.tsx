@@ -2,8 +2,20 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useUser } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
+import toast from 'react-hot-toast'
 import api from '../api/axios'
 import { SkeletonDetails } from '../components/Skeleton'
+import HeartButton from '../components/HeartButton'
+
+interface SimilarJob {
+  id: number
+  title: string
+  companyName: string
+  location: string
+  jobType: string
+  salary: string
+  postedDate: string
+}
 
 interface Job {
   id: number
@@ -89,6 +101,8 @@ export default function JobDetails() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [applied, setApplied] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+  const [similarJobs, setSimilarJobs] = useState<SimilarJob[]>([])
 
   useEffect(() => {
     setLoading(true)
@@ -100,7 +114,17 @@ export default function JobDetails() {
       setError('Failed to load job details. Please try again.')
       setLoading(false)
     })
-  }, [id])
+
+    if (isSignedIn) {
+      api.get('/savedjobs/ids').then((res) => {
+        setIsSaved(res.data.includes(Number(id)))
+      }).catch(() => {})
+    }
+
+    api.get(`/jobs/${id}/similar`).then((res) => {
+      setSimilarJobs(res.data)
+    }).catch(() => {})
+  }, [id, isSignedIn])
 
   const handleExternalApply = () => {
     if (job?.applyLink) window.open(job.applyLink, '_blank', 'noopener')
@@ -111,9 +135,11 @@ export default function JobDetails() {
     setSubmitting(true)
     try {
       const res = await api.post(`/applications/${id}`)
+      toast.success('Application submitted!')
       setMessage(res.data.message || 'Application submitted!')
       setApplied(true)
     } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Application failed')
       setMessage(err.response?.data?.message || 'Application failed')
     } finally {
       setSubmitting(false)
@@ -163,6 +189,13 @@ export default function JobDetails() {
               )}
               {job.seniorityLevel && <span className="micro">{job.seniorityLevel}</span>}
               {job.experienceRequired && job.experienceRequired !== 'Not specified' && <span className="micro">{job.experienceRequired}</span>}
+              {isSignedIn && (
+                <HeartButton
+                  jobId={job.id}
+                  initialSaved={isSaved}
+                  onChange={setIsSaved}
+                />
+              )}
             </div>
             <h1>{job.title}</h1>
             <p className="company" style={{ fontSize: 28, marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -283,6 +316,30 @@ export default function JobDetails() {
               <div className="job-description">
                 {job.highlightsQualifications.split('\n').filter(Boolean).map((line, i) => (
                   <p key={i} className="desc-bullet">{line.replace(/^[•\-\*]\s+/, '')}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {similarJobs.length > 0 && (
+            <div className="detail-section">
+              <h3>Similar Jobs</h3>
+              <div className="job-grid" style={{ marginTop: 16 }}>
+                {similarJobs.map((sj) => (
+                  <div key={sj.id} className="job-card">
+                    <div className="job-card-header">
+                      <h3 style={{ fontSize: 16 }}>{sj.title}</h3>
+                      <span className={`badge ${sj.jobType.toLowerCase()}`}>{sj.jobType}</span>
+                    </div>
+                    <div className="job-card-body">
+                      <p className="company">{sj.companyName}</p>
+                      <p className="meta">
+                        <span>{sj.location}</span>
+                      </p>
+                      <p className="date">{new Date(sj.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <Link to={`/jobs/${sj.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
+                  </div>
                 ))}
               </div>
             </div>

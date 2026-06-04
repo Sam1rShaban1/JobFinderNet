@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Application> Applications { get; set; } = null!;
     public DbSet<UserProfile> UserProfiles { get; set; } = null!;
     public DbSet<PendingDigest> PendingDigests { get; set; } = null!;
+    public DbSet<SavedJob> SavedJobs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -83,5 +84,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<PendingDigest>()
             .HasIndex(d => new { d.UserId, d.EmailFrequency });
+
+        builder.Entity<SavedJob>().ToTable("saved_jobs");
+
+        builder.Entity<SavedJob>()
+            .HasOne(s => s.Job)
+            .WithMany()
+            .HasForeignKey(s => s.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SavedJob>()
+            .HasIndex(s => new { s.UserId, s.JobId })
+            .IsUnique();
     }
 }

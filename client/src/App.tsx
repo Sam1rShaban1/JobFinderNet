@@ -1,4 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -9,9 +11,19 @@ import CreateJob from './pages/CreateJob'
 import MyApplications from './pages/MyApplications'
 import Suggestions from './pages/Suggestions'
 import NotFound from './pages/NotFound'
+import SavedJobs from './pages/SavedJobs'
+import Admin from './pages/Admin'
 
 function Home() {
   const { isSignedIn } = useUser()
+  const navigate = useNavigate()
+  const [heroSearch, setHeroSearch] = useState('')
+
+  const handleHeroSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    navigate(`/jobs?search=${encodeURIComponent(heroSearch)}`)
+  }
+
   return (
     <>
       <section className="hero-section">
@@ -21,14 +33,23 @@ function Home() {
           Connect with top employers and discover career-defining roles
           that match your skills and ambitions.
         </p>
+        <form onSubmit={handleHeroSearch} className="hero-search">
+          <input
+            type="text"
+            value={heroSearch}
+            onChange={(e) => setHeroSearch(e.target.value)}
+            placeholder="Search by title, skill, or company..."
+          />
+          <button type="submit" className="btn btn-primary">Search</button>
+        </form>
         {!isSignedIn ? (
           <div className="hero-actions">
-            <a href="/sign-up" className="btn btn-primary">Get Started</a>
+            <a href="/sign-up" className="btn btn-secondary">Get Started</a>
             <a href="/sign-in" className="btn btn-secondary">Sign In</a>
           </div>
         ) : (
           <div className="hero-actions">
-            <a href="/jobs" className="btn btn-primary">Browse Jobs</a>
+            <a href="/jobs" className="btn btn-secondary">Browse All Jobs</a>
           </div>
         )}
       </section>
@@ -97,6 +118,7 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 export default function App() {
   return (
     <AppProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Navbar />
       <main style={{ flex: 1 }}>
         <ErrorBoundary>
@@ -112,6 +134,12 @@ export default function App() {
             } />
             <Route path="/my-applications" element={
               <ProtectedRoute><MyApplications /></ProtectedRoute>
+            } />
+            <Route path="/saved" element={
+              <ProtectedRoute><SavedJobs /></ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute><Admin /></ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>

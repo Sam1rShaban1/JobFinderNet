@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import api from '../api/axios'
 import { SkeletonList } from '../components/Skeleton'
+import HeartButton from '../components/HeartButton'
 
 interface Job {
   id: number
@@ -48,13 +49,15 @@ function ScoreBadge({ score }: { score: number }) {
 }
 
 export default function Jobs() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [jobs, setJobs] = useState<Job[]>([])
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([])
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const { user } = useAppUser()
   const { isSignedIn } = useAuth()
 
@@ -98,6 +101,11 @@ export default function Jobs() {
     fetchMatched()
   }, [isSignedIn])
 
+  useEffect(() => {
+    if (!isSignedIn) return
+    api.get('/savedjobs/ids').then((res) => setSavedIds(new Set(res.data))).catch(() => {})
+  }, [isSignedIn])
+
   return (
     <div className="container">
       <div className="jobs-header">
@@ -132,11 +140,24 @@ export default function Jobs() {
               <h2 style={{ fontSize: 24, marginBottom: 16 }}>Matched for You</h2>
               <div className="job-grid">
                 {matchedJobs.map((job) => (
-                  <div key={`matched-${job.id}`} className="job-card">
-                    <div className="job-card-header">
-                      <h3>{job.title}</h3>
-                      <ScoreBadge score={job.score} />
-                    </div>
+              <div key={`matched-${job.id}`} className="job-card">
+                <div className="job-card-header">
+                  <h3>{job.title}</h3>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <ScoreBadge score={job.score} />
+                    {isSignedIn && (
+                      <HeartButton
+                        jobId={job.id}
+                        initialSaved={savedIds.has(job.id)}
+                        onChange={(s) => setSavedIds(prev => {
+                          const next = new Set(prev)
+                          if (s) next.add(job.id); else next.delete(job.id)
+                          return next
+                        })}
+                      />
+                    )}
+                  </div>
+                </div>
                     <div className="job-card-body">
                       <p className="company">{job.companyName}</p>
                       <p className="meta">
@@ -158,7 +179,20 @@ export default function Jobs() {
               <div key={job.id} className="job-card">
                 <div className="job-card-header">
                   <h3>{job.title}</h3>
-                  <span className={`badge ${job.jobType.toLowerCase()}`}>{job.jobType}</span>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span className={`badge ${job.jobType.toLowerCase()}`}>{job.jobType}</span>
+                    {isSignedIn && (
+                      <HeartButton
+                        jobId={job.id}
+                        initialSaved={savedIds.has(job.id)}
+                        onChange={(s) => setSavedIds(prev => {
+                          const next = new Set(prev)
+                          if (s) next.add(job.id); else next.delete(job.id)
+                          return next
+                        })}
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="job-card-body">
                   <p className="company">{job.companyName}</p>

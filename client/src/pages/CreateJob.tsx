@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../api/axios'
 
 const SENIORITY_OPTIONS = ['', 'Junior', 'Mid-Level', 'Senior', 'Lead', 'Manager', 'Director']
@@ -44,8 +45,10 @@ export default function CreateJob() {
         methodologies: form.methodologies ? form.methodologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       }
       await api.post('/jobs', body)
+      toast.success('Job posted successfully!')
       navigate('/jobs')
     } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create job')
       setError(err.response?.data?.message || 'Failed to create job')
     }
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useUser } from '@clerk/react'
+import toast from 'react-hot-toast'
 import api from '../api/axios'
 
 interface UserProfile {
@@ -87,11 +88,12 @@ export default function JobPreferencesForm() {
     setSaving(true)
     try {
       await api.put('/profile', profile)
+      toast.success('Preferences saved!')
       setSaved(true)
       window.dispatchEvent(new CustomEvent('preferences-saved'))
       setTimeout(() => setSaved(false), 3000)
     } catch (err) {
-      console.error('Failed to save profile', err)
+      toast.error('Failed to save preferences')
     } finally {
       setSaving(false)
     }
