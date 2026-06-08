@@ -58,6 +58,15 @@ export default function Navbar() {
               Saved Jobs
             </Link>
           )}
+          {appUser?.role === 'Applicant' && (
+            <Link
+              to="/saved-searches"
+              className={`nav-link${isActive('/saved-searches') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              Saved Searches
+            </Link>
+          )}
           {appUser?.role === 'Employer' && (
             <Link
               to="/create-job"
@@ -65,6 +74,15 @@ export default function Navbar() {
               onClick={closeMenu}
             >
               Post Job
+            </Link>
+          )}
+          {appUser?.role === 'Employer' && (
+            <Link
+              to="/claim-company"
+              className={`nav-link${isActive('/claim-company') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              Claim Company
             </Link>
           )}
           {appUser?.role === 'Admin' && (

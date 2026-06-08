@@ -13,6 +13,9 @@ import MyApplications from './pages/MyApplications'
 import Suggestions from './pages/Suggestions'
 import NotFound from './pages/NotFound'
 import SavedJobs from './pages/SavedJobs'
+import SavedSearches from './pages/SavedSearches'
+import CompanyProfile from './pages/CompanyProfile'
+import ClaimCompany from './pages/ClaimCompany'
 import Admin from './pages/Admin'
 
 function Home() {
@@ -140,6 +143,13 @@ export default function App() {
             } />
             <Route path="/saved" element={
               <ProtectedRoute><SavedJobs /></ProtectedRoute>
+            } />
+            <Route path="/saved-searches" element={
+              <ProtectedRoute><SavedSearches /></ProtectedRoute>
+            } />
+            <Route path="/company/:id" element={<CompanyProfile />} />
+            <Route path="/claim-company" element={
+              <ProtectedRoute><ClaimCompany /></ProtectedRoute>
             } />
             <Route path="/admin" element={
               <ProtectedRoute><Admin /></ProtectedRoute>

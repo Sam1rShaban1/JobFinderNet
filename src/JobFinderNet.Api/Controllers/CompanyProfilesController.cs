@@ -1,0 +1,143 @@
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using JobFinderNet.Core.Models;
+using JobFinderNet.Core.DTOs;
+using JobFinderNet.Infrastructure.Data;
+
+namespace JobFinderNet.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CompanyProfilesController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public CompanyProfilesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    {
+        _context = context;
+        _userManager = userManager;
+    }
+
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    public async Task<ActionResult> GetCompanyProfile(int id)
+    {
+        var profile = await _context.CompanyProfiles
+            .Include(c => c.Jobs.Where(j => j.IsActive))
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (profile == null) return NotFound();
+
+        return Ok(new
+        {
+            profile.Id,
+            profile.Name,
+            profile.LogoUrl,
+            profile.Description,
+            profile.Website,
+            profile.Size,
+            profile.Industry,
+            profile.IsVerified,
+            OpenRoles = profile.Jobs.Count
+        });
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<ActionResult> SearchCompanies([FromQuery] string? q)
+    {
+        var query = _context.CompanyProfiles.AsQueryable();
+
+        if (!string.IsNullOrEmpty(q))
+        {
+            query = query.Where(c => c.Name.Contains(q));
+        }
+
+        var companies = await query
+            .OrderBy(c => c.Name)
+            .Take(20)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.LogoUrl,
+                c.Industry,
+                OpenRoles = c.Jobs.Count(j => j.IsActive)
+            })
+            .ToListAsync();
+
+        return Ok(companies);
+    }
+
+    [HttpPost("claim")]
+    [Authorize(Roles = "Employer")]
+    public async Task<ActionResult> ClaimCompany([FromBody] CreateCompanyProfileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var existing = await _context.CompanyProfiles
+            .FirstOrDefaultAsync(c => c.Name == dto.Name);
+
+        if (existing != null)
+        {
+            if (existing.ClaimedByUserId != null)
+                return BadRequest(new { message = "Company already claimed" });
+
+            existing.ClaimedByUserId = userId;
+            existing.LogoUrl = dto.LogoUrl ?? existing.LogoUrl;
+            existing.Description = dto.Description ?? existing.Description;
+            existing.Website = dto.Website ?? existing.Website;
+            existing.Size = dto.Size ?? existing.Size;
+            existing.Industry = dto.Industry ?? existing.Industry;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Company claimed successfully", existing.Id });
+        }
+
+        var company = new CompanyProfile
+        {
+            Name = dto.Name,
+            LogoUrl = dto.LogoUrl,
+            Description = dto.Description,
+            Website = dto.Website,
+            Size = dto.Size,
+            Industry = dto.Industry,
+            ClaimedByUserId = userId,
+            IsVerified = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.CompanyProfiles.Add(company);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Company created and claimed", company.Id });
+    }
+
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<ActionResult> UpdateCompanyProfile(int id, [FromBody] CreateCompanyProfileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var company = await _context.CompanyProfiles.FindAsync(id);
+
+        if (company == null) return NotFound();
+        if (company.ClaimedByUserId != userId)
+            return Forbid();
+
+        company.LogoUrl = dto.LogoUrl ?? company.LogoUrl;
+        company.Description = dto.Description ?? company.Description;
+        company.Website = dto.Website ?? company.Website;
+        company.Size = dto.Size ?? company.Size;
+        company.Industry = dto.Industry ?? company.Industry;
+        company.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok(company);
+    }
+}

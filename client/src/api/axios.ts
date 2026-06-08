@@ -42,4 +42,25 @@ api.interceptors.response.use(
   }
 )
 
+export const savedSearchesApi = {
+  list: () => api.get('/savedsearches'),
+  create: (dto: any) => api.post('/savedsearches', dto),
+  update: (id: number, dto: any) => api.put(`/savedsearches/${id}`, dto),
+  delete: (id: number) => api.delete(`/savedsearches/${id}`),
+  run: (id: number) => api.post(`/savedsearches/${id}/run`),
+}
+
+export const companyProfilesApi = {
+  get: (id: number) => api.get(`/companyprofiles/${id}`),
+  search: (q: string) => api.get(`/companyprofiles?q=${encodeURIComponent(q)}`),
+  claim: (dto: any) => api.post('/companyprofiles/claim', dto),
+  update: (id: number, dto: any) => api.put(`/companyprofiles/${id}`, dto),
+}
+
+export const applicationNotesApi = {
+  list: (applicationId: number) => api.get(`/applications/${applicationId}/notes`),
+  add: (applicationId: number, content: string) =>
+    api.post(`/applications/${applicationId}/notes`, { content }),
+}
+
 export default api
