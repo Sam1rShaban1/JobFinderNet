@@ -16,6 +16,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserProfile> UserProfiles { get; set; } = null!;
     public DbSet<PendingDigest> PendingDigests { get; set; } = null!;
     public DbSet<SavedJob> SavedJobs { get; set; } = null!;
+    public DbSet<SavedSearch> SavedSearches { get; set; } = null!;
+    public DbSet<CompanyProfile> CompanyProfiles { get; set; } = null!;
+    public DbSet<ApplicationNote> ApplicationNotes { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -55,6 +58,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(j => j.EmployerId)
             .IsRequired();
+
+        builder.Entity<Job>()
+            .HasOne(j => j.CompanyProfile)
+            .WithMany(c => c.Jobs)
+            .HasForeignKey(j => j.CompanyProfileId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Application>()
             .HasOne(a => a.Job)
@@ -96,5 +105,42 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<SavedJob>()
             .HasIndex(s => new { s.UserId, s.JobId })
             .IsUnique();
+
+        builder.Entity<SavedSearch>().ToTable("saved_searches");
+
+        builder.Entity<SavedSearch>()
+            .HasIndex(s => new { s.UserId, s.Name })
+            .IsUnique();
+
+        builder.Entity<SavedSearch>()
+            .Property(s => s.FiltersJson)
+            .HasColumnType("jsonb");
+
+        builder.Entity<SavedSearch>()
+            .HasOne(s => s.UserProfile)
+            .WithMany(u => u.SavedSearches)
+            .HasForeignKey(s => s.UserId)
+            .HasPrincipalKey(u => u.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CompanyProfile>().ToTable("company_profiles");
+
+        builder.Entity<CompanyProfile>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
+        builder.Entity<CompanyProfile>()
+            .HasOne(c => c.ClaimedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.ClaimedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<ApplicationNote>().ToTable("application_notes");
+
+        builder.Entity<ApplicationNote>()
+            .HasOne(n => n.Application)
+            .WithMany(a => a.Notes)
+            .HasForeignKey(n => n.ApplicationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -55,4 +55,31 @@ public class Job
 
     [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Application> Applications { get; set; } = new List<Application>();
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int? CompanyProfileId { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public CompanyProfile? CompanyProfile { get; set; }
+}
+
+public class CompanyProfile
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? Description { get; set; }
+    public string? Website { get; set; }
+    public string? Size { get; set; }
+    public string? Industry { get; set; }
+    public bool IsVerified { get; set; }
+    public string? ClaimedByUserId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ApplicationUser? ClaimedByUser { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ICollection<Job> Jobs { get; set; } = new List<Job>();
 }

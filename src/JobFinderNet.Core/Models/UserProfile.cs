@@ -18,4 +18,20 @@ public class UserProfile
     public string EmailFrequency { get; set; } = "daily";
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<SavedSearch> SavedSearches { get; set; } = new List<SavedSearch>();
+}
+
+public class SavedSearch
+{
+    public int Id { get; set; }
+    public required string UserId { get; set; }
+    public required string Name { get; set; }
+    public string FiltersJson { get; set; } = "{}";
+    public string EmailFrequency { get; set; } = "daily";
+    public DateTime? LastRunAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public UserProfile UserProfile { get; set; } = null!;
 }
