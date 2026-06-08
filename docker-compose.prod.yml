@@ -22,3 +22,6 @@ services:
 
   redis:
     restart: always
+
+  mailpit:
+    profiles: []
