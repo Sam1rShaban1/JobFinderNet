@@ -113,6 +113,20 @@ public class ProfileController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("matched/detailed")]
+    public async Task<ActionResult> GetMatchedJobsDetailed([FromQuery] int limit = 12)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var profile = await _context.UserProfiles
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null || profile.Skills.Count == 0)
+            return Ok(new List<Core.DTOs.MatchedJobDto>());
+
+        var matches = await _matchingService.GetTopMatchesDetailed(profile, limit);
+        return Ok(matches);
+    }
+
     [HttpGet("skills")]
     public ActionResult<List<string>> GetAvailableSkills()
     {

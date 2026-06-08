@@ -4,6 +4,21 @@ import { useAuth } from '@clerk/react'
 import api from '../api/axios'
 import { SkeletonList } from '../components/Skeleton'
 
+interface MatchScoreBreakdown {
+  technologyScore: number
+  seniorityScore: number
+  salaryScore: number
+  locationScore: number
+  jobTypeScore: number
+  totalScore: number
+  matchedSkills: string[]
+  missingSkills: string[]
+  seniorityMatchReason?: string
+  salaryMatchReason?: string
+  locationMatchReason?: string
+  jobTypeMatchReason?: string
+}
+
 interface MatchedJob {
   id: number
   title: string
@@ -15,6 +30,7 @@ interface MatchedJob {
   postedDate: string
   isRemote: boolean
   score: number
+  breakdown: MatchScoreBreakdown
 }
 
 function formatSalaryText(salary: string): string {
@@ -36,7 +52,7 @@ export default function Suggestions() {
     setLoading(true)
     setError('')
     try {
-      const res = await api.get('/profile/matched?limit=12')
+      const res = await api.get('/profile/matched/detailed?limit=12')
       setJobs(res.data)
       setHasProfile(true)
     } catch (err: any) {
@@ -174,6 +190,62 @@ export default function Suggestions() {
                 {new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
               </p>
             </div>
+
+            <div className="match-breakdown">
+              {job.breakdown.matchedSkills.length > 0 && (
+                <>
+                  <h4>Skills Match</h4>
+                  <div className="match-skills">
+                    {job.breakdown.matchedSkills.slice(0, 5).map(s => (
+                      <span key={s} className="match-skill matched">✓ {s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()}</span>
+                    ))}
+                    {job.breakdown.missingSkills.slice(0, 3).map(s => (
+                      <span key={s} className="match-skill missing">✗ {s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <h4 style={{ marginTop: 4 }}>Score Breakdown</h4>
+              <div className="match-score-row">
+                <div className="match-score-item">
+                  <span className="match-score-label">Tech</span>
+                  <div className="match-score-track">
+                    <div className="match-score-fill tech" style={{ width: `${(job.breakdown.technologyScore / 40) * 100}%` }} />
+                  </div>
+                  <span className="match-score-value">{job.breakdown.technologyScore}/40</span>
+                </div>
+                <div className="match-score-item">
+                  <span className="match-score-label">Level</span>
+                  <div className="match-score-track">
+                    <div className="match-score-fill level" style={{ width: `${(job.breakdown.seniorityScore / 20) * 100}%` }} />
+                  </div>
+                  <span className="match-score-value">{job.breakdown.seniorityScore}/20</span>
+                </div>
+                <div className="match-score-item">
+                  <span className="match-score-label">Salary</span>
+                  <div className="match-score-track">
+                    <div className="match-score-fill salary" style={{ width: `${(job.breakdown.salaryScore / 15) * 100}%` }} />
+                  </div>
+                  <span className="match-score-value">{job.breakdown.salaryScore}/15</span>
+                </div>
+                <div className="match-score-item">
+                  <span className="match-score-label">Location</span>
+                  <div className="match-score-track">
+                    <div className="match-score-fill location" style={{ width: `${(job.breakdown.locationScore / 15) * 100}%` }} />
+                  </div>
+                  <span className="match-score-value">{job.breakdown.locationScore}/15</span>
+                </div>
+                <div className="match-score-item">
+                  <span className="match-score-label">Type</span>
+                  <div className="match-score-track">
+                    <div className="match-score-fill type" style={{ width: `${(job.breakdown.jobTypeScore / 10) * 100}%` }} />
+                  </div>
+                  <span className="match-score-value">{job.breakdown.jobTypeScore}/10</span>
+                </div>
+              </div>
+            </div>
+
             <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
           </div>
         ))}

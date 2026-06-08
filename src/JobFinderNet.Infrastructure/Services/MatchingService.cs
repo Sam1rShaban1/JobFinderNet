@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using JobFinderNet.Core.Models;
+using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Infrastructure.Data;
 
@@ -16,11 +17,16 @@ public class MatchingService : IMatchingService
 
     public async Task<int> CalculateMatchScore(Job job, UserProfile profile)
     {
-        if (profile.Skills.Count == 0)
-            return 0;
+        var breakdown = await CalculateMatchScoreDetailed(job, profile);
+        return breakdown.TotalScore;
+    }
 
-        var earned = 0.0;
-        var maxPossible = 0.0;
+    public async Task<MatchScoreBreakdown> CalculateMatchScoreDetailed(Job job, UserProfile profile)
+    {
+        var breakdown = new MatchScoreBreakdown();
+
+        if (profile.Skills.Count == 0)
+            return breakdown;
 
         // Technology overlap (40%)
         var requiredTechs = job.RequiredTechnologies
@@ -34,26 +40,27 @@ public class MatchingService : IMatchingService
             .ToList();
 
         if (requiredTechs.Count == 0 && preferredTechs.Count == 0)
-            return 0;
+            return breakdown;
 
         if (requiredTechs.Count > 0 || preferredTechs.Count > 0)
         {
-            var requiredMatches = requiredTechs.Intersect(userSkills).Count();
-            var preferredMatches = preferredTechs.Intersect(userSkills).Count();
+            var requiredMatches = requiredTechs.Intersect(userSkills).ToList();
+            var preferredMatches = preferredTechs.Intersect(userSkills).ToList();
+
+            breakdown.MatchedSkills = requiredMatches.Concat(preferredMatches).Distinct().ToList();
+            breakdown.MissingSkills = requiredTechs.Except(userSkills).ToList();
+
             var totalSlots = requiredTechs.Count + preferredTechs.Count * 0.5;
-            var matchedSlots = requiredMatches + preferredMatches * 0.5;
+            var matchedSlots = requiredMatches.Count + preferredMatches.Count * 0.5;
             if (totalSlots > 0)
             {
-                earned += matchedSlots / totalSlots * 40;
-                maxPossible += 40;
+                breakdown.TechnologyScore = (int)Math.Round(matchedSlots / totalSlots * 40);
             }
         }
 
         // Seniority match (20%)
         if (!string.IsNullOrEmpty(profile.SeniorityLevel))
         {
-            maxPossible += 20;
-
             if (!string.IsNullOrEmpty(job.SeniorityLevel))
             {
                 var levels = new[] { "junior", "mid-level", "senior", "lead", "manager", "director" };
@@ -63,29 +70,35 @@ public class MatchingService : IMatchingService
                 if (userIdx >= 0 && jobIdx >= 0)
                 {
                     var diff = Math.Abs(userIdx - jobIdx);
-                    earned += diff switch
+                    breakdown.SeniorityScore = diff switch
                     {
                         0 => 20,
                         1 => 12,
                         _ => 4,
                     };
+                    breakdown.SeniorityMatchReason = diff switch
+                    {
+                        0 => "Perfect level match",
+                        1 => "Close level match",
+                        _ => $"Level gap: {profile.SeniorityLevel} vs {job.SeniorityLevel}"
+                    };
                 }
                 else
                 {
-                    earned += 10;
+                    breakdown.SeniorityScore = 10;
+                    breakdown.SeniorityMatchReason = "Level not recognized";
                 }
             }
             else
             {
-                earned += 10;
+                breakdown.SeniorityScore = 10;
+                breakdown.SeniorityMatchReason = "Job level not specified";
             }
         }
 
         // Salary overlap (15%)
         if (profile.DesiredSalaryMin.HasValue || profile.DesiredSalaryMax.HasValue)
         {
-            maxPossible += 15;
-
             var userMin = profile.DesiredSalaryMin ?? 0;
             var userMax = profile.DesiredSalaryMax ?? double.MaxValue;
             var jobMin = job.SalaryMin ?? 0;
@@ -99,39 +112,50 @@ public class MatchingService : IMatchingService
                 var userRange = userMax - userMin;
                 if (userRange > 0)
                 {
-                    earned += (overlapEnd - overlapStart) / userRange * 15;
+                    breakdown.SalaryScore = (int)Math.Round((overlapEnd - overlapStart) / userRange * 15);
                 }
                 else
                 {
-                    earned += 15;
+                    breakdown.SalaryScore = 15;
                 }
+                breakdown.SalaryMatchReason = "Salary ranges overlap";
+            }
+            else
+            {
+                breakdown.SalaryMatchReason = "No salary overlap";
             }
         }
 
         // Location/Remote (15%)
         if (profile.IsOpenToRemote || !string.IsNullOrEmpty(profile.PreferredLocation))
         {
-            maxPossible += 15;
-
             if (job.IsRemote && profile.IsOpenToRemote)
             {
-                earned += 15;
+                breakdown.LocationScore = 15;
+                breakdown.LocationMatchReason = "Remote-friendly";
             }
             else if (!string.IsNullOrEmpty(profile.PreferredLocation) && !string.IsNullOrEmpty(job.City))
             {
                 if (profile.PreferredLocation.Equals(job.City, StringComparison.OrdinalIgnoreCase))
                 {
-                    earned += 15;
+                    breakdown.LocationScore = 15;
+                    breakdown.LocationMatchReason = $"Exact city match: {job.City}";
                 }
                 else if (!string.IsNullOrEmpty(job.State) &&
                          profile.PreferredLocation.Equals(job.State, StringComparison.OrdinalIgnoreCase))
                 {
-                    earned += 10;
+                    breakdown.LocationScore = 10;
+                    breakdown.LocationMatchReason = $"State match: {job.State}";
                 }
                 else if (!string.IsNullOrEmpty(job.Country) &&
                          profile.PreferredLocation.Equals(job.Country, StringComparison.OrdinalIgnoreCase))
                 {
-                    earned += 5;
+                    breakdown.LocationScore = 5;
+                    breakdown.LocationMatchReason = $"Country match: {job.Country}";
+                }
+                else
+                {
+                    breakdown.LocationMatchReason = "Location mismatch";
                 }
             }
         }
@@ -139,28 +163,34 @@ public class MatchingService : IMatchingService
         // Job type (10%)
         if (!string.IsNullOrEmpty(profile.PreferredJobType))
         {
-            maxPossible += 10;
-
             if (!string.IsNullOrEmpty(job.JobType))
             {
                 if (profile.PreferredJobType.Equals(job.JobType, StringComparison.OrdinalIgnoreCase))
                 {
-                    earned += 10;
+                    breakdown.JobTypeScore = 10;
+                    breakdown.JobTypeMatchReason = "Exact type match";
                 }
                 else if (IsCompatibleJobType(profile.PreferredJobType, job.JobType))
                 {
-                    earned += 7;
+                    breakdown.JobTypeScore = 7;
+                    breakdown.JobTypeMatchReason = "Compatible type";
+                }
+                else
+                {
+                    breakdown.JobTypeMatchReason = "Type mismatch";
                 }
             }
             else
             {
-                earned += 5;
+                breakdown.JobTypeScore = 5;
+                breakdown.JobTypeMatchReason = "Job type not specified";
             }
         }
 
-        if (maxPossible == 0) return 0;
+        breakdown.TotalScore = breakdown.TechnologyScore + breakdown.SeniorityScore
+            + breakdown.SalaryScore + breakdown.LocationScore + breakdown.JobTypeScore;
 
-        return (int)Math.Round(earned / maxPossible * 100);
+        return breakdown;
     }
 
     public async Task<List<(Job Job, int Score)>> GetTopMatches(UserProfile profile, int limit = 10)
@@ -200,6 +230,40 @@ public class MatchingService : IMatchingService
         }
 
         return scored.OrderByDescending(s => s.Score).Take(limit).ToList();
+    }
+
+    public async Task<List<MatchedJobDto>> GetTopMatchesDetailed(UserProfile profile, int limit = 10)
+    {
+        var jobs = await _context.Jobs
+            .Where(j => j.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var results = new List<MatchedJobDto>();
+
+        foreach (var job in jobs)
+        {
+            var breakdown = await CalculateMatchScoreDetailed(job, profile);
+            if (breakdown.TotalScore > 0)
+            {
+                results.Add(new MatchedJobDto
+                {
+                    Id = job.Id,
+                    Title = job.Title,
+                    CompanyName = job.CompanyName,
+                    Location = job.Location,
+                    JobType = job.JobType,
+                    Salary = job.Salary,
+                    ExperienceRequired = job.ExperienceRequired,
+                    PostedDate = job.PostedDate,
+                    IsRemote = job.IsRemote,
+                    Score = breakdown.TotalScore,
+                    Breakdown = breakdown
+                });
+            }
+        }
+
+        return results.OrderByDescending(r => r.Score).Take(limit).ToList();
     }
 
     private static bool IsCompatibleJobType(string preferred, string jobType)
