@@ -74,10 +74,23 @@ public class CompanyProfilesController : ControllerBase
     }
 
     [HttpPost("claim")]
-    [Authorize(Roles = "Employer")]
+    [Authorize]
     public async Task<ActionResult> ClaimCompany([FromBody] CreateCompanyProfileDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub")
+            ?? string.Empty;
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid token" });
+
+        var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+        var logger = HttpContext.RequestServices.GetRequiredService<ILogger<CompanyProfilesController>>();
+        var allClaims = string.Join(" | ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
+        logger.LogInformation("ClaimCompany: userId={UserId}, roles=[{Roles}], claims=[{Claims}]",
+            userId, string.Join(",", roles), allClaims);
+        if (!roles.Contains("Employer"))
+            return Forbid();
 
         var existing = await _context.CompanyProfiles
             .FirstOrDefaultAsync(c => c.Name == dto.Name);

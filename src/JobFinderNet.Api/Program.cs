@@ -126,7 +126,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     var userManager = context.HttpContext.RequestServices
                         .GetRequiredService<UserManager<ApplicationUser>>();
-                    var sub = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var sub = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? context.Principal?.FindFirst("sub")?.Value;
                     if (sub == null) return;
 
                     var appUser = await userManager.FindByIdAsync(sub);
@@ -148,18 +149,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     }
 
                     var roles = await userManager.GetRolesAsync(appUser);
+                    var logger = context.HttpContext.RequestServices
+                        .GetRequiredService<ILogger<Program>>();
                     var identity = context.Principal?.Identity as ClaimsIdentity;
+                    logger.LogInformation("OnTokenValidated: sub={Sub}, roles={Roles}, identityNull={IsNull}",
+                        sub, string.Join(",", roles), identity == null);
                     if (identity != null)
                     {
+                        if (identity.FindFirst(ClaimTypes.NameIdentifier) == null)
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, sub));
+                        }
                         foreach (var role in roles)
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, role));
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // user provisioning skipped, will retry in AuthController.Me()
+                    var logger = context.HttpContext.RequestServices
+                        .GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "OnTokenValidated failed");
                 }
             },
             OnAuthenticationFailed = context =>
