@@ -92,4 +92,39 @@ public class ApplicationsController : ControllerBase
 
         return Ok(new { message = $"Application {status.ToString().ToLower()}" });
     }
+
+    [HttpGet("{id}/notes")]
+    [Authorize(Roles = "Employer,Admin")]
+    public async Task<ActionResult> GetNotes(int id)
+    {
+        var notes = await _context.ApplicationNotes
+            .Where(n => n.ApplicationId == id)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToListAsync();
+
+        return Ok(notes);
+    }
+
+    [HttpPost("{id}/notes")]
+    [Authorize(Roles = "Employer,Admin")]
+    public async Task<ActionResult> AddNote(int id, AddNoteDto dto)
+    {
+        var application = await _context.Applications.FindAsync(id);
+        if (application == null) return NotFound();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var note = new ApplicationNote
+        {
+            ApplicationId = id,
+            UserId = userId,
+            Content = dto.Content,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.ApplicationNotes.Add(note);
+        await _context.SaveChangesAsync();
+
+        return Ok(note);
+    }
 }
