@@ -63,4 +63,24 @@ export const applicationNotesApi = {
     api.post(`/applications/${applicationId}/notes`, { content }),
 }
 
+export const myJobsApi = {
+  list: () => api.get('/jobs/employer'),
+  update: (id: number, dto: any) => api.put(`/jobs/${id}`, dto),
+  toggle: (id: number) => api.post(`/jobs/${id}/toggle`),
+  delete: (id: number) => api.delete(`/jobs/${id}`),
+}
+
+export const getClaimedCompany = () => api.get('/companyprofiles/my')
+
+export const resumeApi = {
+  parse: (request: { resumeText?: string; imageBase64?: string; imageMediaType?: string; isPdf?: boolean }) =>
+    api.post('/resume/parse', request),
+  recommendations: (request: { resumeText?: string; imageBase64?: string; imageMediaType?: string; isPdf?: boolean }, limit = 10) =>
+    api.post(`/resume/recommendations?limit=${limit}`, request),
+  recommendationsFromSkills: (skills: string[], limit = 10) =>
+    api.post(`/resume/recommendations/from-skills?limit=${limit}`, skills),
+  coverLetter: (request: { jobTitle: string; companyName: string; jobDescription?: string; hiringManager?: string; tone?: string }) =>
+    api.post('/resume/cover-letter', request),
+}
+
 export default api

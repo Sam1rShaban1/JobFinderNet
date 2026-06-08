@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import api from '../api/axios'
+import api, { getClaimedCompany, myJobsApi } from '../api/axios'
 
 const SENIORITY_OPTIONS = ['', 'Junior', 'Mid-Level', 'Senior', 'Lead', 'Manager', 'Director']
 const JOB_TYPE_OPTIONS = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary']
@@ -11,7 +11,11 @@ const CURRENCY_OPTIONS = ['', 'USD', 'EUR', 'GBP', 'CAD', 'AUD']
 const SALARY_PERIODS = ['', 'Yearly', 'Monthly', 'Weekly', 'Hourly']
 
 export default function CreateJob() {
+  const { id } = useParams()
+  const isEditing = Boolean(id)
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(isEditing)
+  const [claimedCompany, setClaimedCompany] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: '', description: '', companyName: '',
     employerLogo: '', employerWebsite: '',
@@ -29,27 +33,84 @@ export default function CreateJob() {
   })
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    getClaimedCompany().then(res => {
+      if (res.data) {
+        setClaimedCompany(res.data.name)
+        setForm(f => ({ ...f, companyName: res.data.name, industry: f.industry || res.data.industry || '' }))
+      }
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!isEditing) return
+    api.get(`/jobs/${id}`).then(res => {
+      const job = res.data
+      setForm({
+        title: job.title || '',
+        description: job.description || '',
+        companyName: claimedCompany || job.companyName || '',
+        employerLogo: job.employerLogo || '',
+        employerWebsite: job.employerWebsite || '',
+        location: job.location || '',
+        city: job.city || '',
+        state: job.state || '',
+        country: job.country || '',
+        jobType: job.jobType || 'Full-time',
+        salary: job.salary || '',
+        salaryMin: job.salaryMin?.toString() || '',
+        salaryMax: job.salaryMax?.toString() || '',
+        salaryCurrency: job.salaryCurrency || '',
+        salaryPeriod: job.salaryPeriod || '',
+        experienceRequired: job.experienceRequired || 'Entry Level',
+        requiredExperienceYears: job.requiredExperienceYears?.toString() || '',
+        seniorityLevel: job.seniorityLevel || '',
+        industry: job.industry || '',
+        jobFunction: job.jobFunction || '',
+        workArrangement: job.workArrangement || '',
+        applyLink: job.applyLink || '',
+        isRemote: job.isRemote || false,
+        educationRequired: job.educationRequired || '',
+        contractDuration: job.contractDuration || '',
+        requiredTechnologies: (job.requiredTechnologies || []).join(', '),
+        preferredTechnologies: (job.preferredTechnologies || []).join(', '),
+        softSkills: (job.softSkills || []).join(', '),
+        benefits: (job.benefits || []).join(', '),
+        methodologies: (job.methodologies || []).join(', '),
+        highlightsQualifications: job.highlightsQualifications || '',
+        highlightsResponsibilities: job.highlightsResponsibilities || '',
+        highlightsBenefits: job.highlightsBenefits || '',
+      })
+    }).catch(() => toast.error('Failed to load job')).finally(() => setLoading(false))
+  }, [id, isEditing, claimedCompany])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    const body = {
+      ...form,
+      companyName: claimedCompany || form.companyName,
+      salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
+      salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
+      requiredExperienceYears: form.requiredExperienceYears ? Number(form.requiredExperienceYears) : null,
+      requiredTechnologies: form.requiredTechnologies ? form.requiredTechnologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      preferredTechnologies: form.preferredTechnologies ? form.preferredTechnologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      softSkills: form.softSkills ? form.softSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      benefits: form.benefits ? form.benefits.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      methodologies: form.methodologies ? form.methodologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+    }
     try {
-      const body = {
-        ...form,
-        salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
-        salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
-        requiredExperienceYears: form.requiredExperienceYears ? Number(form.requiredExperienceYears) : null,
-        requiredTechnologies: form.requiredTechnologies ? form.requiredTechnologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-        preferredTechnologies: form.preferredTechnologies ? form.preferredTechnologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-        softSkills: form.softSkills ? form.softSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-        benefits: form.benefits ? form.benefits.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-        methodologies: form.methodologies ? form.methodologies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      if (isEditing) {
+        await myJobsApi.update(Number(id), body)
+        toast.success('Job updated successfully!')
+      } else {
+        await api.post('/jobs', body)
+        toast.success('Job posted successfully!')
       }
-      await api.post('/jobs', body)
-      toast.success('Job posted successfully!')
-      navigate('/jobs')
+      navigate('/my-jobs')
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create job')
-      setError(err.response?.data?.message || 'Failed to create job')
+      toast.error(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} job`)
+      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} job`)
     }
   }
 
@@ -60,10 +121,12 @@ export default function CreateJob() {
 
   const tagHint = 'Comma-separated list'
 
+  if (loading) return <div className="container" style={{ padding: 60, color: '#888' }}>Loading...</div>
+
   return (
     <div className="form-page" style={{ maxWidth: 800 }}>
-      <p className="micro" style={{ marginBottom: 12 }}>Post a new position</p>
-      <h2>Create Job Listing</h2>
+      <p className="micro" style={{ marginBottom: 12 }}>{isEditing ? 'Edit your job listing' : 'Post a new position'}</p>
+      <h2>{isEditing ? 'Edit Job Listing' : 'Create Job Listing'}</h2>
       {error && <div className="alert alert-error">{error}</div>}
       <form onSubmit={handleSubmit}>
         <h4 style={{ margin: '24px 0 12px' }}>Basic Info</h4>
@@ -75,7 +138,11 @@ export default function CreateJob() {
 
         <div className="form-group">
           <label>Company Name</label>
-          <input type="text" value={form.companyName} onChange={update('companyName')} required />
+          {claimedCompany ? (
+            <input type="text" value={claimedCompany} disabled style={{ opacity: 0.6 }} />
+          ) : (
+            <input type="text" value={form.companyName} onChange={update('companyName')} required />
+          )}
         </div>
 
         <div className="form-row">
@@ -265,7 +332,9 @@ export default function CreateJob() {
         </div>
 
         <div style={{ marginTop: 32 }}>
-          <button type="submit" className="btn btn-primary btn-full">Post Job</button>
+          <button type="submit" className="btn btn-primary btn-full">
+            {isEditing ? 'Save Changes' : 'Post Job'}
+          </button>
         </div>
       </form>
     </div>

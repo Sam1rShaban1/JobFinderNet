@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useUser, SignInButton, UserButton } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
 import JobPreferencesForm from './JobPreferencesForm'
+import ResumeParserForm from './ResumeParserForm'
+import CoverLetterForm from './CoverLetterForm'
 
 export default function Navbar() {
   const { isSignedIn, user: clerkUser } = useUser()
@@ -78,6 +80,15 @@ export default function Navbar() {
           )}
           {appUser?.role === 'Employer' && (
             <Link
+              to="/my-jobs"
+              className={`nav-link${isActive('/my-jobs') || isActive('/edit-job') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              My Jobs
+            </Link>
+          )}
+          {appUser?.role === 'Employer' && (
+            <Link
               to="/claim-company"
               className={`nav-link${isActive('/claim-company') ? ' active' : ''}`}
               onClick={closeMenu}
@@ -122,6 +133,20 @@ export default function Navbar() {
                   labelIcon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>}
                 >
                   <JobPreferencesForm />
+                </UserButton.UserProfilePage>
+                <UserButton.UserProfilePage
+                  label="Resume Parser"
+                  url="resume-parser"
+                  labelIcon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>}
+                >
+                  <ResumeParserForm />
+                </UserButton.UserProfilePage>
+                <UserButton.UserProfilePage
+                  label="Cover Letter"
+                  url="cover-letter"
+                  labelIcon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>}
+                >
+                  <CoverLetterForm />
                 </UserButton.UserProfilePage>
               </UserButton>
             </div>

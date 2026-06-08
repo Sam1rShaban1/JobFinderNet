@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.DTOs;
 using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -73,9 +74,9 @@ public class CompanyProfilesController : ControllerBase
         return Ok(companies);
     }
 
-    [HttpPost("claim")]
+    [HttpGet("my")]
     [Authorize]
-    public async Task<ActionResult> ClaimCompany([FromBody] CreateCompanyProfileDto dto)
+    public async Task<ActionResult> GetMyCompany()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub")
@@ -84,12 +85,34 @@ public class CompanyProfilesController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "Invalid token" });
 
-        var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-        var logger = HttpContext.RequestServices.GetRequiredService<ILogger<CompanyProfilesController>>();
-        var allClaims = string.Join(" | ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
-        logger.LogInformation("ClaimCompany: userId={UserId}, roles=[{Roles}], claims=[{Claims}]",
-            userId, string.Join(",", roles), allClaims);
-        if (!roles.Contains("Employer"))
+        var profile = await _context.CompanyProfiles
+            .FirstOrDefaultAsync(c => c.ClaimedByUserId == userId);
+
+        if (profile == null)
+            return Ok(null);
+
+        return Ok(new
+        {
+            profile.Id,
+            profile.Name,
+            profile.LogoUrl,
+            profile.Description,
+            profile.Website,
+            profile.Size,
+            profile.Industry,
+            profile.IsVerified
+        });
+    }
+
+    [HttpPost("claim")]
+    [Authorize]
+    public async Task<ActionResult> ClaimCompany([FromBody] CreateCompanyProfileDto dto)
+    {
+        var userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid token" });
+
+        if (!User.HasRole("Employer"))
             return Forbid();
 
         var existing = await _context.CompanyProfiles
@@ -136,7 +159,7 @@ public class CompanyProfilesController : ControllerBase
     [Authorize]
     public async Task<ActionResult> UpdateCompanyProfile(int id, [FromBody] CreateCompanyProfileDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.GetUserId()!;
         var company = await _context.CompanyProfiles.FindAsync(id);
 
         if (company == null) return NotFound();

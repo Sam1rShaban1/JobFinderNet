@@ -9,6 +9,7 @@ using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Infrastructure.Services;
 using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -73,20 +74,27 @@ public class JobsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult<Job>> CreateJob(CreateJobDto dto)
     {
-        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
+        var employerId = User.GetUserId()
             ?? throw new InvalidOperationException("User ID not found");
 
         var employer = await _userManager.FindByIdAsync(employerId);
         if (employer == null) return Unauthorized();
 
+        var companyProfile = await _context.CompanyProfiles
+            .FirstOrDefaultAsync(c => c.ClaimedByUserId == employerId);
+
         var job = new Job
         {
             Title = dto.Title,
             Description = dto.Description,
-            CompanyName = dto.CompanyName,
+            CompanyName = companyProfile?.Name ?? dto.CompanyName,
+            CompanyProfileId = companyProfile?.Id,
             EmployerLogo = dto.EmployerLogo,
             EmployerWebsite = dto.EmployerWebsite,
             Location = dto.Location,
@@ -102,7 +110,7 @@ public class JobsController : ControllerBase
             ExperienceRequired = dto.ExperienceRequired,
             RequiredExperienceYears = dto.RequiredExperienceYears,
             SeniorityLevel = dto.SeniorityLevel,
-            Industry = dto.Industry,
+            Industry = dto.Industry ?? companyProfile?.Industry,
             JobFunction = dto.JobFunction,
             WorkArrangement = dto.WorkArrangement,
             ApplyLink = dto.ApplyLink,
@@ -125,43 +133,115 @@ public class JobsController : ControllerBase
         return CreatedAtAction(nameof(GetJob), new { id = job.Id }, job);
     }
 
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<ActionResult<Job>> UpdateJob(int id, CreateJobDto dto)
+    {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
+        var employerId = User.GetUserId()!;
+        var job = await _context.Jobs.FirstOrDefaultAsync(j => j.Id == id);
+
+        if (job == null) return NotFound();
+        if (job.EmployerId != employerId) return Forbid();
+
+        var companyProfile = await _context.CompanyProfiles
+            .FirstOrDefaultAsync(c => c.ClaimedByUserId == employerId);
+
+        job.Title = dto.Title;
+        job.Description = dto.Description;
+        job.CompanyName = companyProfile?.Name ?? dto.CompanyName;
+        job.CompanyProfileId = companyProfile?.Id;
+        job.EmployerLogo = dto.EmployerLogo;
+        job.EmployerWebsite = dto.EmployerWebsite;
+        job.Location = dto.Location;
+        job.City = dto.City;
+        job.State = dto.State;
+        job.Country = dto.Country;
+        job.JobType = dto.JobType;
+        job.Salary = dto.Salary;
+        job.SalaryMin = dto.SalaryMin;
+        job.SalaryMax = dto.SalaryMax;
+        job.SalaryCurrency = dto.SalaryCurrency;
+        job.SalaryPeriod = dto.SalaryPeriod;
+        job.ExperienceRequired = dto.ExperienceRequired;
+        job.RequiredExperienceYears = dto.RequiredExperienceYears;
+        job.SeniorityLevel = dto.SeniorityLevel;
+        job.Industry = dto.Industry ?? companyProfile?.Industry;
+        job.JobFunction = dto.JobFunction;
+        job.WorkArrangement = dto.WorkArrangement;
+        job.ApplyLink = dto.ApplyLink;
+        job.IsRemote = dto.IsRemote;
+        job.EducationRequired = dto.EducationRequired;
+        job.ContractDuration = dto.ContractDuration;
+        job.RequiredTechnologies = dto.RequiredTechnologies;
+        job.PreferredTechnologies = dto.PreferredTechnologies;
+        job.SoftSkills = dto.SoftSkills;
+        job.Benefits = dto.Benefits;
+        job.Methodologies = dto.Methodologies;
+        job.HighlightsQualifications = dto.HighlightsQualifications;
+        job.HighlightsResponsibilities = dto.HighlightsResponsibilities;
+        job.HighlightsBenefits = dto.HighlightsBenefits;
+
+        await _context.SaveChangesAsync();
+        await _jobRepository.UpdateJobAsync(job);
+
+        return Ok(job);
+    }
+
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> DeleteJob(int id)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         await _jobRepository.DeleteJobAsync(id);
         return NoContent();
     }
 
     [HttpPost("{id}/toggle")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> ToggleJobStatus(int id)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         await _jobRepository.ToggleJobStatusAsync(id);
         return NoContent();
     }
 
     [HttpGet("employer")]
-    [Authorize(Roles = "Employer")]
+    [Authorize]
     public async Task<ActionResult> GetEmployerJobs()
     {
-        var employerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        if (!User.HasRole("Employer"))
+            return Forbid();
+
+        var employerId = User.GetUserId()!;
         var jobs = await _jobRepository.GetEmployerJobsAsync(employerId);
         return Ok(jobs);
     }
 
     [HttpGet("{jobId}/applications")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> GetJobApplications(int jobId)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         var apps = await _applicationRepository.GetJobApplications(jobId);
         return Ok(apps);
     }
 
     [HttpPost("populate-techs")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<ActionResult> PopulateTechnologies()
     {
+        if (!User.HasRole("Admin"))
+            return Forbid();
+
         var jobs = await _context.Jobs
             .Where(j => j.RequiredTechnologies.Count == 0 && j.PreferredTechnologies.Count == 0)
             .ToListAsync();
@@ -178,9 +258,12 @@ public class JobsController : ControllerBase
     }
 
     [HttpPost("sync")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<ActionResult> SyncJobs([FromServices] IJSearchJobService jSearch)
     {
+        if (!User.HasRole("Admin"))
+            return Forbid();
+
         var count = await jSearch.SyncJobsAsync();
         return Ok(new { added = count, message = $"Synced {count} new jobs from JSearch" });
     }

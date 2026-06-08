@@ -7,6 +7,7 @@ using JobFinderNet.Core.Models;
 using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -35,11 +36,11 @@ public class ApplicationsController : ControllerBase
     [HttpPost("{jobId}")]
     public async Task<ActionResult> Apply(int jobId)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.GetUserId()!;
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null) return Unauthorized();
 
-        if (!await _userManager.IsInRoleAsync(user, "Applicant"))
+        if (!User.HasRole("Applicant"))
             return Forbid();
 
         var job = await _jobRepository.GetByIdAsync(jobId);
@@ -72,15 +73,18 @@ public class ApplicationsController : ControllerBase
     [HttpGet("my")]
     public async Task<ActionResult> MyApplications()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.GetUserId()!;
         var applications = await _applicationRepository.GetUserApplicationsAsync(userId);
         return Ok(applications);
     }
 
     [HttpPut("{id}/status")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> UpdateStatus(int id, UpdateApplicationStatusDto dto)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         var application = await _context.Applications.FindAsync(id);
         if (application == null) return NotFound();
 
@@ -94,9 +98,12 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpGet("{id}/notes")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> GetNotes(int id)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         var notes = await _context.ApplicationNotes
             .Where(n => n.ApplicationId == id)
             .OrderByDescending(n => n.CreatedAt)
@@ -106,13 +113,16 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpPost("{id}/notes")]
-    [Authorize(Roles = "Employer,Admin")]
+    [Authorize]
     public async Task<ActionResult> AddNote(int id, AddNoteDto dto)
     {
+        if (!User.HasAnyRole("Employer", "Admin"))
+            return Forbid();
+
         var application = await _context.Applications.FindAsync(id);
         if (application == null) return NotFound();
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.GetUserId()!;
 
         var note = new ApplicationNote
         {
