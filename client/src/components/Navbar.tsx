@@ -5,6 +5,7 @@ import { useAppUser } from '../context/AppContext'
 import JobPreferencesForm from './JobPreferencesForm'
 import ResumeParserForm from './ResumeParserForm'
 import CoverLetterForm from './CoverLetterForm'
+import SavedSearchesForm from './SavedSearchesForm'
 
 export default function Navbar() {
   const { isSignedIn, user: clerkUser } = useUser()
@@ -58,15 +59,6 @@ export default function Navbar() {
               onClick={closeMenu}
             >
               Saved Jobs
-            </Link>
-          )}
-          {appUser?.role === 'Applicant' && (
-            <Link
-              to="/saved-searches"
-              className={`nav-link${isActive('/saved-searches') ? ' active' : ''}`}
-              onClick={closeMenu}
-            >
-              Saved Searches
             </Link>
           )}
           {appUser?.role === 'Employer' && (
@@ -148,6 +140,15 @@ export default function Navbar() {
                 >
                   <CoverLetterForm />
                 </UserButton.UserProfilePage>
+                {appUser?.role === 'Applicant' && (
+                  <UserButton.UserProfilePage
+                    label="Saved Searches"
+                    url="saved-searches"
+                    labelIcon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>}
+                  >
+                    <SavedSearchesForm />
+                  </UserButton.UserProfilePage>
+                )}
               </UserButton>
             </div>
           ) : (
