@@ -50,9 +50,9 @@ services:
       redis:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
       retries: 3
     restart: unless-stopped
 
@@ -81,8 +81,10 @@ services:
   nginx:
     build: ./nginx
     depends_on:
-      - api
-      - client
+      api:
+        condition: service_healthy
+      client:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
