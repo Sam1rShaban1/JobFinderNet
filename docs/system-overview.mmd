@@ -1,0 +1,53 @@
+graph LR
+    subgraph Users["User Roles"]
+        Applicant["Applicant"]
+        Employer["Employer"]
+        Admin["Admin"]
+    end
+
+    subgraph Frontend["React 19 SPA"]
+        Home["/ — Home"]
+        Jobs["/jobs — Listings"]
+        Detail["/jobs/:id — Detail"]
+        MyApps["/my-applications"]
+        MyJobs["/my-jobs"]
+        Saved["/saved — Bookmarks"]
+        Search["/saved-searches"]
+        Suggest["/suggestions — AI Match"]
+        Resume["Resume Parser (Tab)"]
+        AdminP["/admin — Dashboard"]
+        Company["/company/:id"]
+    end
+
+    subgraph Backend["ASP.NET Core API"]
+        Auth["/api/auth/*"]
+        JobsAPI["/api/jobs/*"]
+        AppsAPI["/api/applications/*"]
+        ProfileAPI["/api/profile/*"]
+        SavedJobsAPI["/api/savedjobs/*"]
+        SavedSearchAPI["/api/savedsearches/*"]
+        CompanyAPI["/api/companyprofiles/*"]
+        ResumeAPI["/api/resume/*"]
+        StatsAPI["/api/statistics"]
+    end
+
+    subgraph Background["Background Services"]
+        EmailWorker["EmailBackgroundService<br/>Process email queue"]
+        MatchNotifier["JobMatchNotificationService<br/>Check new jobs every 30min"]
+        DigestSender["DigestSendService<br/>Daily/weekly digest at 8am"]
+    end
+
+    Applicant --> Home & Jobs & Detail & MyApps & Saved & Search & Suggest & Resume
+    Employer --> JobsAPI["Create/Edit Jobs"] & MyJobs & Company
+    Admin --> AdminP & StatsAPI
+
+    Home --> JobsAPI
+    Jobs --> JobsAPI
+    Detail --> JobsAPI & AppsAPI["Apply"]
+    Suggest --> ProfileAPI["/matched"]
+    Resume --> ResumeAPI
+    Saved --> SavedJobsAPI
+    Search --> SavedSearchAPI
+
+    MatchNotifier -.->|triggers| EmailWorker
+    DigestSender -.->|triggers| EmailWorker

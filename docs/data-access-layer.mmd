@@ -1,0 +1,38 @@
+graph TB
+    subgraph Core["Core Layer — No Dependencies"]
+        IJobRepo["IJobRepository<br/>interface"]
+        IAppRepo["IApplicationRepository<br/>interface"]
+        ICache["ICacheService<br/>interface"]
+        Models["Models<br/>Job · Application<br/>UserProfile · CompanyProfile"]
+        DTOs["DTOs<br/>CreateJobDto · MatchedJobDto<br/>ParsedResume · CoverLetterResponse"]
+    end
+
+    subgraph Infra["Infrastructure Layer"]
+        JobRepo["JobRepository<br/>EF Core impl"]
+        AppRepo["ApplicationRepository<br/>EF Core impl"]
+        CachedRepo["CachedJobRepository<br/>Decorator pattern"]
+        DbContext["ApplicationDbContext<br/>IdentityDbContext + DbSets"]
+        RedisCache["RedisCacheService<br/>StackExchange.Redis"]
+    end
+
+    subgraph Data["Database"]
+        PG[("PostgreSQL<br/>Jobs · Applications<br/>UserProfiles · SavedJobs<br/>CompanyProfiles · AspNetUsers")]
+        RD[("Redis<br/>Job:{id} cache<br/>Prefix-based invalidation")]
+    end
+
+    subgraph DI["Dependency Injection — Program.cs"]
+        Register["services.AddScoped&lt;IJobRepository, JobRepository&gt;()<br/>services.AddScoped&lt;ICacheService, RedisCacheService&gt;()<br/>services.Decorate&lt;IJobRepository, CachedJobRepository&gt;()"]
+    end
+
+    IJobRepo --> JobRepo
+    IAppRepo --> AppRepo
+    ICache --> RedisCache
+    CachedRepo -->|wraps| IJobRepo
+    CachedRepo -->|delegates to| RedisCache
+    JobRepo --> DbContext
+    AppRepo --> DbContext
+    DbContext --> PG
+    RedisCache --> RD
+
+    Core -.->|referenced by| Infra
+    DI -.->|registers| JobRepo & AppRepo & CachedRepo

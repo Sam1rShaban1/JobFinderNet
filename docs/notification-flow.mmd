@@ -1,0 +1,45 @@
+flowchart TD
+    subgraph Triggers["Event Triggers"]
+        Apply["Application Submitted"]
+        StatusChange["Application Status Changed"]
+        NewJob["New Job Posted"]
+        MatchFound["Job Match Found<br/>(Background Service)"]
+    end
+
+    subgraph NotificationSvc["NotificationService"]
+        AppNotif["SendApplicationSubmittedAsync<br/>'New application for {JobTitle}'"]
+        StatusNotif["SendApplicationStatusChangedAsync<br/>'Status → {Status}'"]
+        JobNotif["SendJobPostedAsync<br/>'New job at {Company}'"]
+        MatchNotif["SendMatchNotificationAsync<br/>'New match: {JobTitle} ({Score}%)'"]
+        DigestNotif["SendDigestAsync<br/>'Daily/weekly digest'"]
+    end
+
+    subgraph Queue["Email Queue — Channel&lt;EmailMessage&gt;"]
+        Enqueue["EnqueueAsync"]
+        Channel["Bounded Channel<br/>Backpressure aware"]
+    end
+
+    subgraph Workers["Background Workers"]
+        EmailWorker["EmailBackgroundService<br/>TryRead → SendAsync"]
+        MatchWorker["JobMatchNotificationService<br/>Every 30 min"]
+        DigestWorker["DigestSendService<br/>Daily 8:00 AM"]
+    end
+
+    subgraph Providers["Email Providers"]
+        SmtpDev["SMTP (Mailpit)<br/>Development"]
+        Mailjet["Mailjet REST API<br/>Production"]
+    end
+
+    Apply --> AppNotif
+    StatusChange --> StatusNotif
+    NewJob --> JobNotif
+    MatchFound --> MatchNotif
+
+    AppNotif & StatusNotif & JobNotif & MatchNotif & DigestNotif --> Enqueue
+    Enqueue --> Channel
+
+    MatchWorker -->|checks new jobs<br/>every 30min| MatchNotif
+    DigestWorker -->|batch pending<br/>at 8am| DigestNotif
+
+    Channel --> EmailWorker
+    EmailWorker --> SmtpDev & Mailjet

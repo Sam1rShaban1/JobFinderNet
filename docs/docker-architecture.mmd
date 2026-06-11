@@ -1,0 +1,44 @@
+graph TB
+    subgraph Dev["Development — docker-compose.yml"]
+        direction TB
+        PG[("PostgreSQL 16<br/>port 5433")]
+        RD[("Redis 7<br/>port 6380")]
+        MP["Mailpit<br/>:1025 SMTP / :8025 UI"]
+        API_D[".NET API<br/>port 8080"]
+        Client_D["Vite Dev Server<br/>port 5173"]
+        Nginx_D["Nginx<br/>:80 / :443"]
+        Tests["dotnet test<br/>(one-shot)"]
+    end
+
+    subgraph Prod["Production — docker-compose.prod.yml"]
+        direction TB
+        PG_P[("PostgreSQL 16")]
+        RD_P[("Redis 7")]
+        API_P[".NET API<br/>port 8080"]
+        Client_P["Nginx (built React)<br/>static files"]
+        Nginx_P["Nginx<br/>:80 / :443<br/>TLS + Rate Limiting"]
+    end
+
+    subgraph CI["CI/CD — GitHub Actions"]
+        direction LR
+        Trigger["Push to main"]
+        Checkout["Checkout"]
+        Dotnet["dotnet restore → build → test"]
+        Publish["dotnet publish"]
+        Upload["Upload artifact"]
+        Azure["Deploy to Azure App Service"]
+        Trigger --> Checkout --> Dotnet --> Publish --> Upload --> Azure
+    end
+
+    PG -.->|conn string| API_D
+    RD -.->|cache| API_D
+    MP -.->|smtp| API_D
+    Client_D -.->|proxy| Nginx_D
+    API_D -.->|proxy| Nginx_D
+
+    PG_P -.->|conn string| API_P
+    RD_P -.->|cache| API_P
+    Client_P -.->|static| Nginx_P
+    API_P -.->|proxy| Nginx_P
+
+    Azure -.->|deploys| Prod

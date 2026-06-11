@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor User as User (Browser)
+    participant ClerkFE as Clerk Provider<br/>(Frontend)
+    participant ClerkCloud as Clerk Cloud
+    participant API as ASP.NET Core API
+    participant DB as PostgreSQL
+
+    Note over User,DB: — Sign-Up / First Sign-In —
+
+    User->>ClerkFE: Click Sign In / Sign Up
+    ClerkFE->>ClerkCloud: Redirect to Clerk Hosted UI
+    User->>ClerkCloud: Enter credentials / OAuth
+    ClerkCloud-->>ClerkFE: JWT (id_token + access_token)
+    ClerkFE->>ClerkFE: Store session (cookies)
+
+    Note over User,DB: — Authenticated API Request —
+
+    User->>ClerkFE: Navigate to protected page
+    ClerkFE->>API: GET /api/jobs/employer<br/>Authorization: Bearer <jwt>
+    API->>API: JwtBearerHandler validates JWT<br/>against Clerk authority
+    API->>API: OnTokenValidated callback
+
+    alt New user (sub not in DB)
+        API->>DB: INSERT INTO AspNetUsers<br/>(FirstName, LastName, Email)
+        API->>DB: INSERT INTO UserRoles<br/>(UserId, RoleId = Applicant)
+    end
+
+    API->>DB: Query user + roles
+    DB-->>API: ApplicationUser + Claims
+    API->>API: Map claims to HttpContext.User<br/>(NameIdentifier, Email, Role)
+
+    alt [Authorize(Roles = "Employer,Admin")]
+        API->>API: Check role claim
+        alt User has required role
+            API-->>User: 200 OK — Resource data
+        else Missing role
+            API-->>User: 403 Forbidden — Insufficient permissions
+        end
+    else AllowAnonymous
+        API-->>User: 200 OK — Public data
+    end
+
+    API-->>ClerkFE: JSON Response
+    ClerkFE-->>User: Render UI

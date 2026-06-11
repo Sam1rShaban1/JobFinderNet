@@ -1,0 +1,147 @@
+erDiagram
+    ApplicationUser ||--o{ Job : "employs"
+    ApplicationUser ||--o| UserProfile : "has"
+    ApplicationUser ||--o{ SavedJob : "saves"
+    ApplicationUser ||--o{ Application : "applies"
+    ApplicationUser ||--o{ ApplicationNote : "writes"
+    ApplicationUser ||--o| CompanyProfile : "claims"
+
+    Job ||--o{ Application : "receives"
+    Job ||--o{ SavedJob : "bookmarked in"
+    Job }o--|| CompanyProfile : "belongs to"
+    Job }o--o| ApplicationUser : "employer"
+
+    UserProfile ||--o{ SavedSearch : "has"
+
+    Application ||--o{ ApplicationNote : "has"
+
+    ApplicationUser {
+        string Id PK
+        string Email
+        string FirstName
+        string LastName
+        string CompanyName
+        string NormalizedEmail
+        bool EmailConfirmed
+    }
+
+    Job {
+        int Id PK
+        string Title
+        string Description
+        string CompanyName
+        string Location
+        string City
+        string State
+        string Country
+        float Latitude
+        float Longitude
+        string JobType
+        decimal Salary
+        decimal SalaryMin
+        decimal SalaryMax
+        string SalaryCurrency
+        string SalaryPeriod
+        string ExperienceRequired
+        int RequiredExperienceYears
+        string SeniorityLevel
+        string Industry
+        string JobFunction
+        string WorkArrangement
+        string ExternalJobId
+        string ApplyLink
+        bool IsRemote
+        bool IsActive
+        datetime PostedDate
+        bool HasManagementResponsibilities
+        bool IsAiMlInvolved
+        string EducationRequired
+        string ContractDuration
+        jsonb RequiredTechnologies
+        jsonb PreferredTechnologies
+        jsonb SoftSkills
+        jsonb Benefits
+        jsonb Methodologies
+        string Source
+        string SourceUrl
+        string EmployerId FK
+        int CompanyProfileId FK
+    }
+
+    CompanyProfile {
+        int Id PK
+        string Name
+        string LogoUrl
+        string Description
+        string Website
+        string Size
+        string Industry
+        bool IsVerified
+        string ClaimedByUserId FK
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Application {
+        int Id PK
+        datetime AppliedDate
+        string Status
+        int JobId FK
+        string ApplicantId FK
+        string CoverLetter
+        string ResumeUrl
+    }
+
+    ApplicationNote {
+        int Id PK
+        int ApplicationId FK
+        string UserId
+        string Content
+        datetime CreatedAt
+    }
+
+    UserProfile {
+        int Id PK
+        string UserId UK
+        jsonb Skills
+        string SeniorityLevel
+        decimal DesiredSalaryMin
+        decimal DesiredSalaryMax
+        bool IsOpenToRemote
+        string PreferredLocation
+        string PreferredJobType
+        bool EmailOnMatch
+        int MinimumMatchScore
+        string EmailFrequency
+        datetime UpdatedAt
+    }
+
+    SavedSearch {
+        int Id PK
+        int UserProfileId FK
+        string Name
+        jsonb FiltersJson
+        string EmailFrequency
+        datetime LastRunAt
+        datetime CreatedAt
+    }
+
+    SavedJob {
+        int Id PK
+        string UserId FK
+        int JobId FK
+        datetime SavedDate
+    }
+
+    PendingDigest {
+        int Id PK
+        string UserId
+        int JobId FK
+        float MatchScore
+        string JobTitle
+        string CompanyName
+        string Location
+        string Salary
+        string EmailFrequency
+        datetime CreatedAt
+    }

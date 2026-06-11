@@ -1,0 +1,54 @@
+sequenceDiagram
+    autonumber
+    actor User as Applicant
+    participant FE as React SPA
+    participant API as ResumeController
+    participant AiSvc as AiService<br/>(NVIDIA LLM)
+    participant MatchSvc as MatchingService
+    participant DB as PostgreSQL
+
+    Note over User,DB: — Parse Resume —
+
+    User->>FE: Upload resume (text / image / PDF)
+    FE->>API: POST /api/resume/parse<br/>Body: { ResumeText, ImageBase64, IsPdf }
+
+    alt PDF file
+        API->>API: ExtractTextFromPdfBytes()<br/>using UglyToad.PdfPig
+    else Image file
+        API->>API: Base64 encode image
+    end
+
+    API->>AiSvc: ParseResumeAsync(text)
+    AiSvc->>AiSvc: Build prompt with resume content
+    AiSvc->>AiSvc: POST to NVIDIA API<br/>model: moonshotai/kimi-k2.6
+    AiSvc-->>API: ParsedResume{ Skills[], Seniority,<br/>ExperienceYears, Education[], Summary }
+
+    API-->>FE: 200 OK — ParsedResume object
+    FE-->>User: Display parsed skills,<br/>seniority, education
+
+    Note over User,DB: — Get Job Recommendations —
+
+    User->>FE: Click "Get Recommendations"
+    FE->>API: POST /api/resume/recommendations<br/>Body: { ResumeText }
+
+    API->>AiSvc: ParseResumeAsync(resumeText)
+    AiSvc-->>API: ParsedResume
+
+    API->>DB: Create temporary UserProfile<br/>with parsed skills
+    API->>MatchSvc: GetTopMatches(profile, topN=10)
+    MatchSvc->>DB: Get active jobs
+    MatchSvc->>MatchSvc: Score each job<br/>(5-factor algorithm)
+    MatchSvc-->>API: List<MatchedJobDto>
+
+    API-->>FE: 200 OK — ParsedResume + MatchedJobDto list
+    FE-->>User: Display recommendations<br/>with match scores
+
+    Note over User,DB: — Generate Cover Letter —
+
+    User->>FE: Click "Generate Cover Letter"
+    FE->>API: POST /api/resume/cover-letter<br/>Body: { JobTitle, CompanyName,<br/>JobDescription, Tone }
+    API->>AiSvc: GenerateCoverLetterAsync(...)
+    AiSvc->>AiSvc: POST to NVIDIA API
+    AiSvc-->>API: CoverLetterResponse{ CoverLetter, Tips }
+    API-->>FE: 200 OK — Cover letter + tips
+    FE-->>User: Display cover letter<br/>with copy button

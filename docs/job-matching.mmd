@@ -1,0 +1,45 @@
+flowchart TD
+    Start([User requests<br/>matched jobs]) --> FetchProfile[Fetch UserProfile<br/>Skills · Seniority · Salary<br/>Location · JobType]
+
+    FetchProfile --> FetchJobs[Fetch Active Jobs<br/>from Database]
+
+    FetchJobs --> Loop{For each job}
+
+    Loop -->|next job| TechScore[Technology Score — 40%]
+    TechScore --> TechCalc{Compute Jaccard<br/>Similarity}
+    TechCalc -->|intersection / union| TechReason[Generate reason<br/>Matched: React, .NET<br/>Missing: Kubernetes]
+
+    TechReason --> SeniorityScore[Seniority Score — 20%]
+    SeniorityScore --> SeniorityCalc{Map levels to integers<br/>Junior=0 … Director=5<br/>Compute proximity}
+    SeniorityCalc --> SeniorityReason[Generate reason<br/>Senior vs Mid — close match]
+
+    SeniorityReason --> SalaryScore[Salary Score — 15%]
+    SalaryScore --> SalaryCalc{Compute range<br/>overlap}
+    SalaryCalc -->|intersection / max range| SalaryReason[Generate reason<br/>Ranges overlap<br/>60k–80k]
+
+    SalaryReason --> LocationScore[Location Score — 15%]
+    LocationScore --> LocationCheck{Is Remote?}
+    LocationCheck -->|Yes + user open| LocFull[Score = 1.0]
+    LocationCheck -->|No| CityMatch{City / State /<br/>Country match?}
+    CityMatch -->|exact city| LocHigh[Score = 0.9]
+    CityMatch -->|same country| LocMed[Score = 0.5]
+    CityMatch -->|no match| LocLow[Score = 0.1]
+    LocFull & LocHigh & LocMed & LocLow --> LocReason[Generate reason]
+
+    LocReason --> JobTypeScore[Job Type Score — 10%]
+    JobTypeScore --> JobTypeCalc{Exact match?}
+    JobTypeCalc -->|Yes| JTFull[Score = 1.0]
+    JobTypeCalc -->|Partial| JTMed[Score = 0.5]
+    JobTypeCalc -->|No| JTLow[Score = 0.0]
+    JTFull & JTMed & JTLow --> JTReason[Generate reason]
+
+    JTReason --> TotalCalc[Total Score =<br/>Tech×0.4 + Seniority×0.2 +<br/>Salary×0.15 + Location×0.15 +<br/>JobType×0.1]
+
+    TotalCalc --> StoreResult[Store MatchedJobDto<br/>with breakdown]
+    StoreResult --> Loop
+
+    Loop -->|all done| Sort[Sort by TotalScore<br/>descending]
+    Sort --> Filter{Filter above<br/>threshold?}
+    Filter -->|Yes| Return[Return top matches<br/>with breakdown]
+    Filter -->|GetTopMatches| TopN[Return top N results]
+    Return & TopN --> End([Response to client])

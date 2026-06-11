@@ -1,0 +1,52 @@
+sequenceDiagram
+    autonumber
+    actor Applicant as Applicant
+    participant FE as React SPA
+    participant API as ASP.NET Core API
+    participant DB as PostgreSQL
+    participant EmailQ as Email Queue<br/>(Channel)
+    participant SMTP as SMTP / Mailjet
+    actor Employer as Employer
+
+    Note over Applicant,Employer: — Apply to Job —
+
+    Applicant->>FE: Click "Apply" on JobDetails
+    FE->>API: POST /api/applications/{jobId}<br/>Authorization: Bearer <jwt><br/>Body: { CoverLetter, ResumeUrl }
+
+    API->>API: Validate user role = Applicant
+    API->>DB: Check HasUserAppliedToJob(userId, jobId)
+    alt Already applied
+        API-->>Applicant: 409 Conflict — Already applied
+    else User owns the job
+        API-->>Applicant: 403 Forbidden — Cannot apply to own job
+    else Job is inactive
+        API-->>Applicant: 400 Bad Request — Job not active
+    else Valid application
+        API->>DB: INSERT INTO Applications<br/>(JobId, ApplicantId, CoverLetter, ResumeUrl)
+        API->>DB: SELECT Job WHERE Id = jobId
+        DB-->>API: Job (with EmployerId)
+        API->>EmailQ: Enqueue ApplicationSubmitted email
+        API-->>Applicant: 201 Created — Application object
+    end
+
+    Note over Applicant,Employer: — Background: Process Email Queue —
+
+    EmailQ->>SMTP: Dequeue + Send email<br/>to Employer
+    SMTP-->>Employer: "New application received for {JobTitle}"
+
+    Note over Applicant,Employer: — Employer Reviews Application —
+
+    Employer->>FE: View applications for job
+    FE->>API: GET /api/jobs/{jobId}/applications
+    API->>DB: SELECT applications with Applicant nav
+    DB-->>API: List<Application>
+    API-->>Employer: 200 OK — Applications list
+    FE-->>Employer: Render application cards
+
+    Employer->>FE: Update status to Interview
+    FE->>API: PUT /api/applications/{id}/status<br/>Body: { Status: Interview }
+    API->>DB: UPDATE Application SET Status = Interview
+    API->>EmailQ: Enqueue ApplicationStatusChanged email
+    API-->>Employer: 200 OK — Updated application
+    EmailQ->>SMTP: Send status update to applicant
+    SMTP-->>Applicant: "Your application status changed"
