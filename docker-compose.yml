@@ -50,7 +50,7 @@ services:
       redis:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/health"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -97,9 +97,9 @@ services:
       - certbot-etc:/etc/letsencrypt
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
+      interval: 15s
+      timeout: 5s
       retries: 3
 
   tests:
