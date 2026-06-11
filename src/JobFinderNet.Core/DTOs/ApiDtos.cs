@@ -157,10 +157,17 @@ public class CreateCompanyProfileDto
     public string? Website { get; set; }
     public string? Size { get; set; }
     public string? Industry { get; set; }
+    public int? FoundedYear { get; set; }
+    public string? Culture { get; set; }
 }
 
 public class AddNoteDto
 {
     [Required]
     public string Content { get; set; } = string.Empty;
+}
+
+public class ApplyRequest
+{
+    public string? CoverLetter { get; set; }
 }

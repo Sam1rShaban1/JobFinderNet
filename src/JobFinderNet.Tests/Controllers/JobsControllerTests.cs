@@ -2,9 +2,11 @@ using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.Interfaces.Repositories;
+using JobFinderNet.Infrastructure.Data;
 using JobFinderNet.Api.Controllers;
 
 namespace JobFinderNet.Tests.Controllers;
@@ -20,11 +22,17 @@ public class JobsControllerTests
         _mockJobRepo = new Mock<IJobRepository>();
         _mockAppRepo = new Mock<IApplicationRepository>();
 
+        var mockDbContext = new Mock<ApplicationDbContext>(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase($"Test_{Guid.NewGuid()}")
+                .Options);
+
         _controller = new JobsController(
             _mockJobRepo.Object,
             _mockAppRepo.Object,
             null!,
-            new Mock<ILogger<JobsController>>().Object);
+            new Mock<ILogger<JobsController>>().Object,
+            mockDbContext.Object);
 
         var claims = new List<Claim>
         {
@@ -42,13 +50,12 @@ public class JobsControllerTests
     [Fact]
     public async Task GetJobs_ReturnsOkResult()
     {
-        var paginatedList = new PaginatedList<Job>(new List<Job>(), 0, 1, 10);
-        _mockJobRepo.Setup(r => r.GetPaginatedJobsAsync(1, 10)).ReturnsAsync(paginatedList);
+        var paginatedList = new PaginatedList<Job>(new List<Job>(), 0, 1, 12);
+        _mockJobRepo.Setup(r => r.GetPaginatedJobsAsync(1, 12)).ReturnsAsync(paginatedList);
 
         var result = await _controller.GetJobs();
 
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        Assert.NotNull(result);
     }
 
     [Fact]

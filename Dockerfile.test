@@ -1,0 +1,13 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /tests
+
+COPY src/JobFinderNet.Core/JobFinderNet.Core.csproj src/JobFinderNet.Core/
+COPY src/JobFinderNet.Infrastructure/JobFinderNet.Infrastructure.csproj src/JobFinderNet.Infrastructure/
+COPY src/JobFinderNet.Api/JobFinderNet.Api.csproj src/JobFinderNet.Api/
+COPY src/JobFinderNet.Tests/JobFinderNet.Tests.csproj src/JobFinderNet.Tests/
+
+RUN dotnet restore src/JobFinderNet.Tests/JobFinderNet.Tests.csproj
+
+COPY src/ src/
+
+ENTRYPOINT ["dotnet", "test", "src/JobFinderNet.Tests/", "--verbosity", "normal", "--logger", "console;verbosity=detailed"]

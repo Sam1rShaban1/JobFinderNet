@@ -17,26 +17,34 @@ using System.Security.Claims;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+var isTesting = builder.Environment.IsEnvironment("Testing");
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// Redis distributed cache
-var redisConnection = builder.Configuration.GetConnectionString("Redis")
-    ?? throw new InvalidOperationException("Redis connection string not found.");
-builder.Services.AddStackExchangeRedisCache(options =>
+if (!isTesting)
 {
-    options.Configuration = redisConnection;
-    options.InstanceName = "JobFinderNet:";
-});
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddSingleton(sp =>
-    ConnectionMultiplexer.Connect(redisConnection));
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(connectionString));
+
+    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+    // Redis distributed cache
+    var redisConnection = builder.Configuration.GetConnectionString("Redis")
+        ?? throw new InvalidOperationException("Redis connection string not found.");
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "JobFinderNet:";
+    });
+
+    builder.Services.AddSingleton(sp =>
+        ConnectionMultiplexer.Connect(redisConnection));
+}
+else
+{
+    // Testing: InMemory DB + memory cache are registered by TestWebApplicationFactory
+}
 
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IJobRepository>(sp =>
@@ -56,9 +64,12 @@ builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddScoped<IEmailService, SmtpEmailSender>();
-builder.Services.AddHostedService<EmailBackgroundService>();
-builder.Services.AddHostedService<JobMatchNotificationService>();
-builder.Services.AddHostedService<DigestSendService>();
+if (!isTesting)
+{
+    builder.Services.AddHostedService<EmailBackgroundService>();
+    builder.Services.AddHostedService<JobMatchNotificationService>();
+    builder.Services.AddHostedService<DigestSendService>();
+}
 
 // JSearch job sync
 builder.Services.Configure<JSearchOptions>(builder.Configuration.GetSection(JSearchOptions.SectionName));
@@ -165,6 +176,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         foreach (var role in roles)
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                        }
+
+                        // Add email_verified claim from Clerk JWT
+                        var emailVerified = context.Principal?.FindFirst("email_verified")?.Value;
+                        if (emailVerified == "true" || appUser.EmailConfirmed)
+                        {
+                            identity.AddClaim(new Claim("email_verified", "true"));
                         }
                     }
                 }

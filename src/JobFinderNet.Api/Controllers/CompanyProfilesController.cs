@@ -115,6 +115,12 @@ public class CompanyProfilesController : ControllerBase
         if (!User.HasRole("Employer"))
             return Forbid();
 
+        if (!User.HasClaim("email_verified", "true"))
+            return BadRequest(new { message = "Please verify your email before claiming a company" });
+
+        if (!User.HasRole("Employer"))
+            return Forbid();
+
         var existing = await _context.CompanyProfiles
             .FirstOrDefaultAsync(c => c.Name == dto.Name);
 
@@ -129,6 +135,8 @@ public class CompanyProfilesController : ControllerBase
             existing.Website = dto.Website ?? existing.Website;
             existing.Size = dto.Size ?? existing.Size;
             existing.Industry = dto.Industry ?? existing.Industry;
+            existing.FoundedYear = dto.FoundedYear ?? existing.FoundedYear;
+            existing.Culture = dto.Culture ?? existing.Culture;
             existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -143,6 +151,8 @@ public class CompanyProfilesController : ControllerBase
             Website = dto.Website,
             Size = dto.Size,
             Industry = dto.Industry,
+            FoundedYear = dto.FoundedYear,
+            Culture = dto.Culture,
             ClaimedByUserId = userId,
             IsVerified = false,
             CreatedAt = DateTime.UtcNow,
@@ -171,6 +181,8 @@ public class CompanyProfilesController : ControllerBase
         company.Website = dto.Website ?? company.Website;
         company.Size = dto.Size ?? company.Size;
         company.Industry = dto.Industry ?? company.Industry;
+        company.FoundedYear = dto.FoundedYear ?? company.FoundedYear;
+        company.Culture = dto.Culture ?? company.Culture;
         company.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

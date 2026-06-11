@@ -19,6 +19,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SavedSearch> SavedSearches { get; set; } = null!;
     public DbSet<CompanyProfile> CompanyProfiles { get; set; } = null!;
     public DbSet<ApplicationNote> ApplicationNotes { get; set; } = null!;
+    public DbSet<AppNotification> Notifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -142,5 +143,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(a => a.Notes)
             .HasForeignKey(n => n.ApplicationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<AppNotification>().ToTable("notifications");
+
+        builder.Entity<AppNotification>()
+            .HasIndex(n => new { n.UserId, n.IsRead });
     }
 }

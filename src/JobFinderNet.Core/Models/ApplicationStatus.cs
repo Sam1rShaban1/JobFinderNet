@@ -4,5 +4,7 @@ public enum ApplicationStatus
 {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
+    Screening,
+    Interview
 }

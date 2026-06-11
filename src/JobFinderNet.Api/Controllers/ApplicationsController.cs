@@ -34,7 +34,8 @@ public class ApplicationsController : ControllerBase
     }
 
     [HttpPost("{jobId}")]
-    public async Task<ActionResult> Apply(int jobId)
+    [Authorize]
+    public async Task<ActionResult> Apply(int jobId, [FromBody] ApplyRequest? request = null)
     {
         var userId = User.GetUserId()!;
         var user = await _userManager.FindByIdAsync(userId);
@@ -42,6 +43,9 @@ public class ApplicationsController : ControllerBase
 
         if (!User.HasRole("Applicant"))
             return Forbid();
+
+        if (!User.HasClaim("email_verified", "true") && !user.EmailConfirmed)
+            return BadRequest(new { message = "Please verify your email before applying" });
 
         var job = await _jobRepository.GetByIdAsync(jobId);
         if (job == null || !job.IsActive)
@@ -58,7 +62,8 @@ public class ApplicationsController : ControllerBase
             ApplicantId = userId,
             Applicant = user,
             Status = ApplicationStatus.Pending,
-            AppliedDate = DateTime.UtcNow
+            AppliedDate = DateTime.UtcNow,
+            CoverLetter = request?.CoverLetter
         };
 
         _context.Entry(job).State = EntityState.Unchanged;
@@ -66,6 +71,17 @@ public class ApplicationsController : ControllerBase
         var success = await _applicationRepository.AddAsync(application);
         if (!success)
             return BadRequest(new { message = "Failed to submit application" });
+
+        // Create in-app notification for employer
+        _context.Notifications.Add(new AppNotification
+        {
+            UserId = job.EmployerId,
+            Title = "New Application",
+            Message = $"{user.UserName ?? user.Email} applied to {job.Title}",
+            Link = $"/jobs/{job.Id}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
 
         return Ok(new { message = "Application submitted successfully" });
     }
@@ -89,9 +105,28 @@ public class ApplicationsController : ControllerBase
         if (application == null) return NotFound();
 
         if (!Enum.TryParse<ApplicationStatus>(dto.Status, true, out var status))
-            return BadRequest(new { message = "Invalid status. Use Pending, Accepted, or Rejected" });
+            return BadRequest(new { message = "Invalid status. Use Pending, Screening, Interview, Accepted, or Rejected" });
 
         application.Status = status;
+        await _context.SaveChangesAsync();
+
+        // Create in-app notification for applicant
+        var statusLabel = status switch
+        {
+            ApplicationStatus.Accepted => "accepted",
+            ApplicationStatus.Rejected => "not selected",
+            ApplicationStatus.Screening => "moved to screening",
+            ApplicationStatus.Interview => "moved to interview",
+            _ => status.ToString().ToLower()
+        };
+        _context.Notifications.Add(new AppNotification
+        {
+            UserId = application.ApplicantId,
+            Title = "Application Update",
+            Message = $"Your application has been {statusLabel}",
+            Link = "/my-applications",
+            CreatedAt = DateTime.UtcNow
+        });
         await _context.SaveChangesAsync();
 
         return Ok(new { message = $"Application {status.ToString().ToLower()}" });

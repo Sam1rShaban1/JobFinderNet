@@ -72,6 +72,8 @@ public class CompanyProfile
     public string? Website { get; set; }
     public string? Size { get; set; }
     public string? Industry { get; set; }
+    public int? FoundedYear { get; set; }
+    public string? Culture { get; set; }
     public bool IsVerified { get; set; }
     public string? ClaimedByUserId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -71,4 +71,54 @@ public class StatisticsService : IStatisticsService
             })
             .ToDictionaryAsync(x => x.JobTitle, x => x.ApplicationCount);
     }
+
+    public async Task<EmployerDashboardDto> GetEmployerDashboardAsync(string employerId)
+    {
+        var now = DateTime.UtcNow;
+        var sixMonthsAgo = now.AddMonths(-6);
+
+        var employerJobs = await _context.Jobs
+            .Where(j => j.EmployerId == employerId)
+            .ToListAsync();
+
+        var jobIds = employerJobs.Select(j => j.Id).ToList();
+        var applications = await _context.Applications
+            .Where(a => jobIds.Contains(a.JobId))
+            .ToListAsync();
+
+        var monthlyPostings = employerJobs
+            .Where(j => j.PostedDate >= sixMonthsAgo)
+            .GroupBy(j => new { j.PostedDate.Year, j.PostedDate.Month })
+            .Select(g => new MonthlyJobPosting
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Count = g.Count()
+            })
+            .OrderBy(m => m.Year).ThenBy(m => m.Month)
+            .ToList();
+
+        var topJobs = employerJobs
+            .Select(j => new JobApplicationCount
+            {
+                JobId = j.Id,
+                Title = j.Title,
+                ApplicationCount = applications.Count(a => a.JobId == j.Id)
+            })
+            .OrderByDescending(x => x.ApplicationCount)
+            .Take(5)
+            .ToList();
+
+        return new EmployerDashboardDto
+        {
+            TotalJobs = employerJobs.Count,
+            ActiveJobs = employerJobs.Count(j => j.IsActive),
+            TotalApplications = applications.Count,
+            ApplicationsByStatus = applications
+                .GroupBy(a => a.Status)
+                .ToDictionary(g => g.Key.ToString(), g => g.Count()),
+            TopJobs = topJobs,
+            MonthlyPostings = monthlyPostings
+        };
+    }
 }

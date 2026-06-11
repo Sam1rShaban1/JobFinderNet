@@ -80,6 +80,9 @@ public class JobsController : ControllerBase
         if (!User.HasAnyRole("Employer", "Admin"))
             return Forbid();
 
+        if (!User.HasClaim("email_verified", "true"))
+            return BadRequest(new { message = "Please verify your email before posting jobs" });
+
         var employerId = User.GetUserId()
             ?? throw new InvalidOperationException("User ID not found");
 

@@ -90,8 +90,8 @@ public class ApplicationService : IApplicationService
         if (application.Status == newStatus)
             return ApplicationResult.CreateError($"Application is already {newStatus.ToString().ToLower()}");
 
-        if (application.Status != ApplicationStatus.Pending)
-            return ApplicationResult.CreateError($"Cannot change status from {application.Status} to {newStatus}");
+        if (application.Status == ApplicationStatus.Rejected)
+            return ApplicationResult.CreateError($"Cannot change status from Rejected");
 
         application.Status = newStatus;
         await _context.SaveChangesAsync();

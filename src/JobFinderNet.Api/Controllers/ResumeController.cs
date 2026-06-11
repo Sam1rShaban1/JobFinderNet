@@ -12,10 +12,12 @@ namespace JobFinderNet.Api.Controllers;
 public class ResumeController : ControllerBase
 {
     private readonly IAiService _aiService;
+    private readonly ILogger<ResumeController> _logger;
 
-    public ResumeController(IAiService aiService)
+    public ResumeController(IAiService aiService, ILogger<ResumeController> logger)
     {
         _aiService = aiService;
+        _logger = logger;
     }
 
     [HttpPost("parse")]
@@ -24,6 +26,8 @@ public class ResumeController : ControllerBase
         if (!User.HasRole("Applicant"))
             return Forbid();
 
+        var userId = User.GetUserId() ?? "unknown";
+
         try
         {
             var result = await _aiService.ParseResumeAsync(request);
@@ -31,11 +35,13 @@ public class ResumeController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning(ex, "Invalid resume parse request from user {UserId}", userId);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = $"Failed to parse resume: {ex.Message}" });
+            _logger.LogError(ex, "Failed to parse resume for user {UserId}", userId);
+            return StatusCode(500, new { message = "Failed to process resume. Please try again." });
         }
     }
 
@@ -62,11 +68,13 @@ public class ResumeController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning(ex, "Invalid recommendation request from user {UserId}", userId);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = $"Failed to get recommendations: {ex.Message}" });
+            _logger.LogError(ex, "Failed to get recommendations for user {UserId}", userId);
+            return StatusCode(500, new { message = "Failed to get recommendations. Please try again." });
         }
     }
 
@@ -88,7 +96,8 @@ public class ResumeController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = $"Failed to get recommendations: {ex.Message}" });
+            _logger.LogError(ex, "Failed to get skill-based recommendations for user {UserId}", userId);
+            return StatusCode(500, new { message = "Failed to get recommendations. Please try again." });
         }
     }
 
@@ -109,7 +118,8 @@ public class ResumeController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = $"Failed to generate cover letter: {ex.Message}" });
+            _logger.LogError(ex, "Failed to generate cover letter for user {UserId}", userId);
+            return StatusCode(500, new { message = "Failed to generate cover letter. Please try again." });
         }
     }
 }
