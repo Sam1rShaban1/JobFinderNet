@@ -12,6 +12,8 @@ interface Company {
   website: string | null
   size: string | null
   industry: string | null
+  foundedYear: number | null
+  culture: string | null
   isVerified: boolean
   openRoles: number
 }
@@ -73,6 +75,7 @@ export default function CompanyProfile() {
           <p style={{ color: '#616161' }}>
             {company.industry && <>{company.industry}</>}
             {company.size && <> · {company.size} employees</>}
+            {company.foundedYear && <> · Founded {company.foundedYear}</>}
             {company.openRoles > 0 && <> · {company.openRoles} open roles</>}
           </p>
         </div>
@@ -82,6 +85,13 @@ export default function CompanyProfile() {
         <div style={{ marginBottom: 32 }}>
           <h3 style={{ marginBottom: 12 }}>About</h3>
           <p style={{ color: '#616161', lineHeight: 1.7 }}>{company.description}</p>
+        </div>
+      )}
+
+      {company.culture && (
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ marginBottom: 12 }}>Culture</h3>
+          <p style={{ color: '#616161', lineHeight: 1.7 }}>{company.culture}</p>
         </div>
       )}
 

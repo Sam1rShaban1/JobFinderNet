@@ -103,6 +103,9 @@ export default function JobDetails() {
   const [applied, setApplied] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [similarJobs, setSimilarJobs] = useState<SimilarJob[]>([])
+  const [coverLetter, setCoverLetter] = useState(() =>
+    localStorage.getItem('coverLetter') || ''
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -134,10 +137,11 @@ export default function JobDetails() {
   const handleConfirmApply = async () => {
     setSubmitting(true)
     try {
-      const res = await api.post(`/applications/${id}`)
+      const res = await api.post(`/applications/${id}`, { coverLetter: coverLetter || undefined })
       toast.success('Application submitted!')
       setMessage(res.data.message || 'Application submitted!')
       setApplied(true)
+      if (coverLetter) localStorage.removeItem('coverLetter')
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Application failed')
       setMessage(err.response?.data?.message || 'Application failed')
@@ -374,9 +378,32 @@ export default function JobDetails() {
 
         {showPrompt && (
           <div className="confirm-overlay">
-            <div className="confirm-card">
+            <div className="confirm-card" style={{ maxWidth: 480 }}>
               <h3>Did you apply?</h3>
               <p>Click confirm to track this application in your profile.</p>
+              <div style={{ marginBottom: 16, textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 6, color: 'var(--primary)' }}>
+                  Cover Letter (optional)
+                </label>
+                <textarea
+                  value={coverLetter}
+                  onChange={(e) => {
+                    setCoverLetter(e.target.value)
+                    localStorage.setItem('coverLetter', e.target.value)
+                  }}
+                  placeholder="Paste your cover letter or leave blank..."
+                  rows={4}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--hairline)',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontFamily: 'var(--font-body)',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
               <div className="confirm-actions">
                 <button onClick={handleSkip} className="btn btn-outline">Skip</button>
                 <button onClick={handleConfirmApply} className="btn btn-primary" disabled={submitting}>

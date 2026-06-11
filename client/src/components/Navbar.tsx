@@ -6,6 +6,7 @@ import JobPreferencesForm from './JobPreferencesForm'
 import ResumeParserForm from './ResumeParserForm'
 import CoverLetterForm from './CoverLetterForm'
 import SavedSearchesForm from './SavedSearchesForm'
+import NotificationBell from './NotificationBell'
 
 export default function Navbar() {
   const { isSignedIn, user: clerkUser } = useUser()
@@ -81,6 +82,15 @@ export default function Navbar() {
           )}
           {appUser?.role === 'Employer' && (
             <Link
+              to="/employer-dashboard"
+              className={`nav-link${isActive('/employer-dashboard') ? ' active' : ''}`}
+              onClick={closeMenu}
+            >
+              Dashboard
+            </Link>
+          )}
+          {appUser?.role === 'Employer' && (
+            <Link
               to="/claim-company"
               className={`nav-link${isActive('/claim-company') ? ' active' : ''}`}
               onClick={closeMenu}
@@ -112,6 +122,7 @@ export default function Navbar() {
         <div className="nav-auth">
           {isSignedIn ? (
             <div className="nav-user">
+              <NotificationBell />
               <span className="nav-email">
                 {[clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ') ||
                  clerkUser?.username ||

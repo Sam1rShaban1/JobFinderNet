@@ -18,6 +18,7 @@ import CompanyProfile from './pages/CompanyProfile'
 import ClaimCompany from './pages/ClaimCompany'
 import MyJobs from './pages/MyJobs'
 import Admin from './pages/Admin'
+import EmployerDashboard from './pages/EmployerDashboard'
 
 function Home() {
   const { isSignedIn } = useUser()
@@ -154,6 +155,9 @@ export default function App() {
             } />
             <Route path="/my-jobs" element={
               <ProtectedRoute><MyJobs /></ProtectedRoute>
+            } />
+            <Route path="/employer-dashboard" element={
+              <ProtectedRoute><EmployerDashboard /></ProtectedRoute>
             } />
             <Route path="/edit-job/:id" element={
               <ProtectedRoute><CreateJob /></ProtectedRoute>

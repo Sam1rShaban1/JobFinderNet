@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import api from '../api/axios'
 
 interface CounterProps {
   end: number
@@ -53,6 +54,20 @@ function Counter({ end, label, suffix = '' }: CounterProps) {
 }
 
 export default function StatsCounter() {
+  const [stats, setStats] = useState<{ totalJobs: number; totalTechnologies: number; jobsByType: Record<string, number> } | null>(null)
+
+  useEffect(() => {
+    api.get('/statistics')
+      .then(res => setStats(res.data))
+      .catch(() => {
+        setStats({ totalJobs: 0, totalTechnologies: 0, jobsByType: {} })
+      })
+  }, [])
+
+  const totalJobs = stats?.totalJobs ?? 0
+  const totalTech = stats?.totalTechnologies ?? 0
+  const categories = stats?.jobsByType ? Object.keys(stats.jobsByType).length : 0
+
   return (
     <div style={{
       display: 'grid',
@@ -60,9 +75,9 @@ export default function StatsCounter() {
       gap: 32,
       padding: '40px 0',
     }}>
-      <Counter end={962} label="Active Jobs" />
-      <Counter end={117} label="Tech Skills" />
-      <Counter end={12} label="Job Categories" />
+      <Counter end={totalJobs} label="Active Jobs" />
+      <Counter end={totalTech} label="Tech Skills" />
+      <Counter end={categories} label="Job Categories" />
     </div>
   )
 }

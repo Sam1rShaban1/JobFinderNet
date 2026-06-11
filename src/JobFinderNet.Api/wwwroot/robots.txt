@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /sign-in
+Disallow: /sign-up
+Sitemap: https://jobfindernet.com/sitemap.xml

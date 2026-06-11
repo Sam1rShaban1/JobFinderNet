@@ -1,66 +1,28 @@
-graph TB
-    subgraph Client["Frontend — React 19 + TypeScript"]
-        ClerkFE["Clerk Provider<br/>@clerk/react"]
-        Pages["Pages<br/>Home · Jobs · JobDetails<br/>MyApplications · Suggestions<br/>ResumeParser · Admin"]
-        APIAxios["Axios API Layer<br/>Token Interceptor"]
-    end
+architecture-beta
+    group frontend(globe)[Frontend]
+    group api(cloud)[Backend API]
+    group data(database)[Data Layer]
+    group external(globe)[External]
 
-    subgraph Nginx["Nginx Reverse Proxy"]
-        TLS["TLS Termination<br/>Rate Limiting<br/>Security Headers"]
-    end
+    service react(browser)[React SPA] in frontend
+    service nginx(server)[Nginx Proxy] in api
+    service ctrl(server)[Controllers] in api
+    service svc(server)[Services] in api
+    service repo(server)[Repositories] in api
+    service pg(database)[PostgreSQL] in data
+    service redis(database)[Redis Cache] in data
+    service clerk(cloud)[Clerk Auth] in external
+    service nvidia(cloud)[NVIDIA LLM] in external
+    service jsearch(cloud)[JSearch API] in external
+    service mailjet(cloud)[Mailjet SMTP] in external
 
-    subgraph API["ASP.NET Core Web API — .NET 10"]
-        Controllers["Controllers"]
-        Middleware["Error Handling Middleware"]
-        Program["Program.cs<br/>DI · Auth · CORS"]
-    end
-
-    subgraph Services["Service Layer"]
-        JobSvc["JobService"]
-        AppSvc["ApplicationService"]
-        MatchSvc["MatchingService"]
-        AiSvc["AiService"]
-        StatsSvc["StatisticsService"]
-        NotifySvc["NotificationService"]
-        EmailBg["EmailBackgroundService"]
-        MatchBg["JobMatchNotificationService"]
-        DigestBg["DigestSendService"]
-    end
-
-    subgraph Repositories["Repository Layer"]
-        JobRepo["IJobRepository"]
-        AppRepo["IApplicationRepository"]
-        CachedRepo["CachedJobRepository<br/>Decorator + Redis"]
-    end
-
-    subgraph Data["Data Layer"]
-        DbContext["ApplicationDbContext<br/>EF Core 10"]
-        PostgreSQL[("PostgreSQL 16")]
-        Redis[("Redis 7<br/>Distributed Cache")]
-    end
-
-    subgraph External["External Services"]
-        Clerk["Clerk<br/>JWT Auth"]
-        NVIDIA["NVIDIA API<br/>kimi-k2.6 LLM"]
-        JSearch["JSearch API v2<br/>Job Aggregation"]
-        SMTP["SMTP / Mailjet<br/>Email Delivery"]
-    end
-
-    ClerkFE --> Pages --> APIAxios
-    APIAxios -->|HTTP + JWT| TLS
-    TLS --> Controllers
-    Controllers --> Middleware
-    Middleware --> Program
-    Program --> JobSvc & AppSvc & MatchSvc & AiSvc & StatsSvc & NotifySvc
-    NotifySvc --> EmailBg & MatchBg & DigestBg
-    JobSvc --> JobRepo
-    AppSvc --> AppRepo
-    JobRepo --> DbContext
-    AppRepo --> DbContext
-    CachedRepo --> Redis
-    DbContext --> PostgreSQL
-    AiSvc -->|REST| NVIDIA
-    MatchSvc -.->|read cache| Redis
-    NotifySvc -->|enqueue| SMTP
-    Controllers -.->|validate JWT| Clerk
-    JobSvc -.->|sync jobs| JSearch
+    react{group}:R --> L:nginx{group}
+    nginx:R --> L:ctrl
+    ctrl:R --> L:svc
+    svc:R --> L:repo
+    repo:R --> L:pg{group}
+    repo:T --> B:redis{group}
+    ctrl{group}:T --> B:clerk{group}
+    svc{group}:T --> B:nvidia{group}
+    svc{group}:T --> B:jsearch{group}
+    svc{group}:B --> T:mailjet{group}
