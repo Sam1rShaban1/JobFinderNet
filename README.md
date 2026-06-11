@@ -1,117 +1,125 @@
-# JobFinderNet — Service-Oriented Job Search & Recruitment Platform
+# JobFinderNet — AI-Powered Job Search & Recruitment Platform
 
-A .NET 10 Web API powering job listings, applications, AI-powered resume parsing, smart candidate matching, and user management with a clean service-oriented architecture.
+A full-stack job board with AI-powered resume parsing, smart job matching, and cover letter generation. Built with .NET 10, Clerk auth, NVIDIA AI, and React 19.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | .NET 10, ASP.NET Core, Entity Framework Core |
+| Frontend | React 19, TypeScript, Vite, React Router v7 |
+| Database | PostgreSQL 16 (Npgsql) |
+| Cache | Redis 7 (StackExchange.Redis) |
+| Auth | Clerk (JWT Bearer, external IdP) |
+| AI | NVIDIA API (Kimi K2.6 model) |
+| Job Data | JSearch API (real job listings) |
+| Email | SMTP via background queue + Mailpit (dev) |
+| Infrastructure | Docker Compose, Nginx reverse proxy |
+| Testing | xUnit, Moq, EF Core InMemory |
+
+## Features
+
+- **Clerk Authentication** — Sign up/in with Google, email, etc. Auto-provisions users with role-based access (Applicant, Employer, Admin)
+- **AI Resume Parsing** — Upload a PDF/image or paste text; extracts skills, seniority, education via NVIDIA Kimi K2.6 multimodal
+- **Smart Job Matching** — Adaptive scoring algorithm (tech overlap 40%, seniority 20%, salary 15%, location 15%, job type 10%) with detailed breakdowns
+- **AI Cover Letter Generation** — Generate tailored cover letters with tone selection, persisted across sessions
+- **Job Listings** — 960+ real jobs synced from JSearch API with cursor-based pagination, search, filters
+- **Employer Dashboard** — Post jobs, manage applications, track hiring pipeline with Kanban board
+- **Application Tracking** — Drag-and-drop Kanban (Applied → Screening → Interview → Offer → Rejected)
+- **Saved Jobs & Searches** — Bookmark jobs, save search filters with configurable email alerts
+- **Company Profiles** — Employers claim and manage company pages
+- **Email Notifications** — Application confirmations, status changes, job matches, daily/weekly digests
+- **Admin Panel** — Job sync, tech extraction, platform statistics
+- **Responsive Design** — Mobile-first with hamburger nav, skeleton loading, error boundaries
+
+## Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌──────────────┐
+│  React SPA  │────▶│   Nginx     │────▶│  .NET API    │
+│  (Clerk)    │     │  (reverse   │     │              │
+│             │     │   proxy)    │     │  Controllers │
+└─────────────┘     └─────────────┘     │      │       │
+                                        │  Services    │
+                                        │      │       │
+                                        │  Repositories│
+                                        │      │       │
+                                        │  EF Core     │
+                                        └──────┬───────┘
+                                               │
+                            ┌──────────────────┼──────────────────┐
+                            │                  │                  │
+                       ┌────▼────┐       ┌─────▼─────┐     ┌─────▼─────┐
+                       │PostgreSQL│       │   Redis   │     │  NVIDIA   │
+                       │   DB    │       │  (cache)  │     │  (AI API) │
+                       └─────────┘       └───────────┘     └───────────┘
+```
 
 ## Project Structure
 
 ```
 JobFinderNet/
 ├── src/
-│   ├── JobFinderNet.Core/                # Domain models, interfaces, DTOs
-│   │   ├── Models/                       # Entity models (Job, Application, UserProfile, etc.)
+│   ├── JobFinderNet.Core/                  # Domain models, interfaces, DTOs
+│   │   ├── Models/                         # Job, Application, UserProfile, etc.
 │   │   ├── Interfaces/
-│   │   │   ├── Repositories/             # Repository contracts
-│   │   │   └── Services/                 # Service contracts
-│   │   └── DTOs/                         # API data transfer objects
-│   ├── JobFinderNet.Infrastructure/      # Data access, external services
-│   │   ├── Data/                         # DbContext, seeding
-│   │   ├── Repositories/                 # EF Core repository implementations
-│   │   └── Services/                     # Business logic + background services
-│   ├── JobFinderNet.Api/                 # ASP.NET Core Web API
-│   │   ├── Controllers/                  # REST API controllers
-│   │   ├── Middleware/                    # Error handling middleware
-│   │   ├── Helpers/                      # Claims helper extensions
-│   │   └── Program.cs                    # App entry point & DI config
-│   └── JobFinderNet.Tests/               # xUnit tests
-│       ├── Controllers/                  # Controller unit tests
-│       ├── Services/                     # Service unit tests
-│       ├── Repositories/                 # Repository unit tests (InMemory EF)
-│       ├── Integration/                  # Full pipeline integration tests
-│       └── Helpers/                      # Test factories and mocks
-├── client/                               # React 19 + TypeScript + Vite frontend
-│   └── src/
-│       ├── api/                          # Axios instance + API wrappers
-│       ├── components/                   # Reusable UI components
-│       ├── pages/                        # Route pages
-│       └── context/                      # AppContext (global state)
-├── database/                             # PostgreSQL seed scripts
-├── nginx/                                # Reverse proxy config + TLS
-├── docs/                                 # Mermaid architecture diagrams
-├── .github/workflows/deploy.yml          # CI/CD pipeline
-├── docker-compose.yml                    # Development stack
-├── docker-compose.prod.yml               # Production overrides
-├── Dockerfile                            # API multi-stage build
-├── Dockerfile.test                       # Test runner container
+│   │   │   ├── Repositories/               # Repository contracts
+│   │   │   └── Services/                   # Service contracts
+│   │   └── DTOs/                           # API data transfer objects
+│   ├── JobFinderNet.Infrastructure/        # Data access, external services
+│   │   ├── Data/                           # DbContext, seeding
+│   │   ├── Repositories/                   # EF Core repository implementations
+│   │   └── Services/                       # Business logic (AI, matching, email, etc.)
+│   ├── JobFinderNet.Api/                   # ASP.NET Core Web API
+│   │   ├── Controllers/                    # REST API controllers (9 total)
+│   │   ├── Helpers/                        # ClaimsHelper for auth
+│   │   ├── Middleware/                      # Error handling
+│   │   └── Program.cs                      # App entry point & DI config
+│   ├── JobFinderNet.Tests/                 # xUnit tests
+│   │   ├── Controllers/                    # Unit tests
+│   │   ├── Services/                       # Service tests
+│   │   ├── Repositories/                   # Repository tests
+│   │   ├── Integration/                    # Integration tests
+│   │   └── Helpers/                        # TestWebApplicationFactory, MockAiService
+│   └── .env                                # Environment variables (not committed)
+├── client/                                 # React SPA
+│   ├── src/
+│   │   ├── pages/                          # 14 page components
+│   │   ├── components/                     # 8 reusable components
+│   │   ├── api/                            # Axios client + typed API helpers
+│   │   └── context/                        # React context for app state
+│   └── package.json
+├── database/
+│   └── seed.sql                            # Full DB schema + seed data
+├── nginx/                                  # Nginx reverse proxy config
+├── docker-compose.yml                      # Dev stack (PostgreSQL, Redis, Mailpit, API, Client)
+├── Dockerfile                              # API production image
+├── Dockerfile.test                         # Test runner image
 └── README.md
 ```
-
-## Tech Stack
-
-| Component | Technology |
-|---|---|
-| Framework | .NET 10.0, ASP.NET Core |
-| Database | PostgreSQL 16 (via Npgsql) |
-| ORM | Entity Framework Core 10.0 |
-| Authentication | Clerk (JWT Bearer) |
-| Frontend | React 19 + TypeScript 6 + Vite 8 |
-| Caching | Redis 7 (StackExchange.Redis) |
-| AI Integration | NVIDIA API (kimi-k2.6 LLM) |
-| External Jobs | JSearch API v2 |
-| Email | SMTP (Mailpit dev) / Mailjet (prod) |
-| Containerization | Docker + Docker Compose |
-| Reverse Proxy | Nginx (Alpine) with TLS |
-| Testing | xUnit, Moq, EF Core InMemory |
-| CI/CD | GitHub Actions |
-| Cloud | Microsoft Azure (App Service) |
-
-## Architecture — Service-Oriented
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐     ┌──────────┐
-│   React 19 SPA  │────▶│   Nginx Proxy    │────▶│  ASP.NET Core│────▶│PostgreSQL│
-│   (TypeScript)  │     │  TLS + Rate      │     │  Web API     │     │  16      │
-│   Clerk Auth    │     │  Limiting        │     │  .NET 10     │     └──────────┘
-└─────────────────┘     └──────────────────┘     │              │     ┌──────────┐
-                                                  │ Controllers  │────▶│  Redis 7 │
-                                                  │     │        │     │  Cache   │
-                                                  │ Services     │     └──────────┘
-                                                  │     │        │
-                                                  │ Repositories │     ┌──────────┐
-                                                  │     │        │────▶│ NVIDIA   │
-                                                  │ EF Core 10   │     │ LLM API  │
-                                                  └──────────────┘     └──────────┘
-```
-
-**Layers:**
-- **Core** — Contains only domain models, interfaces, and DTOs. No infrastructure dependencies.
-- **Infrastructure** — Implements Core interfaces. Handles data access, external services, background workers, and seeding.
-- **Api** — Presentation layer. Controllers handle HTTP, delegate business logic to services.
-- **Tests** — Unit and integration tests using mocks, in-memory database, and WebApplicationFactory.
-
-**Design Patterns:** Repository Pattern, Decorator Pattern (CachedJobRepository), Dependency Injection, DTO Pattern, Background Service Pattern, Channel\<T\> Queue.
 
 ## API Endpoints
 
 ### Authentication
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/auth/me` | Get current user (auto-provisions Clerk users) | JWT |
+| GET | `/api/auth/me` | Get current user info | JWT |
 
 ### Jobs
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/jobs` | List jobs (paginated) | None |
-| GET | `/api/jobs/{id}` | Get job details | None |
-| GET | `/api/jobs/search?query=` | Search jobs | None |
-| GET | `/api/jobs/{id}/similar` | Similar jobs by industry/tech | None |
+| GET | `/api/jobs` | List jobs (paginated) | Public |
+| GET | `/api/jobs/{id}` | Get job details | Public |
+| GET | `/api/jobs/search?query=` | Search jobs | Public |
+| GET | `/api/jobs/{id}/similar` | Get similar jobs | Public |
 | POST | `/api/jobs` | Create job | Employer/Admin |
 | PUT | `/api/jobs/{id}` | Update job | Employer/Admin |
 | DELETE | `/api/jobs/{id}` | Delete job | Employer/Admin |
 | POST | `/api/jobs/{id}/toggle` | Toggle active status | Employer/Admin |
-| GET | `/api/jobs/employer` | Employer's jobs | Employer |
+| GET | `/api/jobs/employer` | Employer's own jobs | Employer |
 | GET | `/api/jobs/{jobId}/applications` | View applicants | Employer/Admin |
-| POST | `/api/jobs/sync` | Sync from JSearch API | Admin |
-| POST | `/api/jobs/populate-techs` | Extract technologies | Admin |
+| POST | `/api/jobs/populate-techs` | Extract tech keywords | Admin |
+| POST | `/api/jobs/sync` | Sync jobs from JSearch | Admin |
 
 ### Applications
 | Method | Endpoint | Description | Auth |
@@ -119,26 +127,38 @@ JobFinderNet/
 | POST | `/api/applications/{jobId}` | Apply to job | Applicant |
 | GET | `/api/applications/my` | My applications | User |
 | PUT | `/api/applications/{id}/status` | Update status | Employer/Admin |
-| GET | `/api/applications/{id}/notes` | Get application notes | Employer/Admin |
+| GET | `/api/applications/{id}/notes` | Get notes | Employer/Admin |
 | POST | `/api/applications/{id}/notes` | Add note | Employer/Admin |
 
-### User Profile & Matching
+### Profile
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/profile` | Get/create profile | User |
-| PUT | `/api/profile` | Update preferences | User |
-| GET | `/api/profile/matched` | Get matched jobs | User |
-| GET | `/api/profile/matched/detailed` | Matched jobs with score breakdown | User |
-| GET | `/api/profile/skills` | Available skills list (200+) | User |
+| GET | `/api/profile` | Get profile | User |
+| PUT | `/api/profile` | Update profile | User |
+| GET | `/api/profile/matched` | Matched jobs (summary) | User |
+| GET | `/api/profile/matched/detailed` | Matched jobs (breakdown) | User |
+| GET | `/api/profile/skills` | Available skills list | User |
 
-### Saved Jobs & Searches
+### Resume & AI
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/resume/parse` | Parse resume (text/image) | Applicant |
+| POST | `/api/resume/recommendations` | Get recommendations from resume | Applicant |
+| POST | `/api/resume/recommendations/from-skills` | Recommendations from skills | Applicant |
+| POST | `/api/resume/cover-letter` | Generate cover letter | Applicant |
+
+### Saved Jobs
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
 | GET | `/api/savedjobs` | Get saved jobs | User |
-| POST | `/api/savedjobs/{jobId}` | Save a job | User |
-| DELETE | `/api/savedjobs/{jobId}` | Unsave a job | User |
+| POST | `/api/savedjobs/{jobId}` | Save job | User |
+| DELETE | `/api/savedjobs/{jobId}` | Unsave job | User |
 | GET | `/api/savedjobs/ids` | Get saved job IDs | User |
-| GET | `/api/savedsearches` | Get saved searches | User |
+
+### Saved Searches
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/savedsearches` | List saved searches | User |
 | POST | `/api/savedsearches` | Create saved search | User |
 | PUT | `/api/savedsearches/{id}` | Update saved search | User |
 | DELETE | `/api/savedsearches/{id}` | Delete saved search | User |
@@ -147,113 +167,129 @@ JobFinderNet/
 ### Company Profiles
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/companyprofiles/{id}` | Get company profile | None |
-| GET | `/api/companyprofiles?q=` | Search companies | None |
+| GET | `/api/companyprofiles/{id}` | Company detail | Public |
+| GET | `/api/companyprofiles` | Search companies | Public |
 | GET | `/api/companyprofiles/my` | My claimed company | User |
 | POST | `/api/companyprofiles/claim` | Claim/create company | Employer |
 | PUT | `/api/companyprofiles/{id}` | Update company | Owner |
 
-### Resume & AI
+### Statistics
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| POST | `/api/resume/parse` | Parse resume (text/image/PDF) | Applicant |
-| POST | `/api/resume/recommendations` | Parse + get job recommendations | Applicant |
-| POST | `/api/resume/recommendations/from-skills` | Recommendations from skills | Applicant |
-| POST | `/api/resume/cover-letter` | AI-generated cover letter | Applicant |
+| GET | `/api/statistics` | Platform stats | Public |
 
-### System
+### Health
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/statistics` | Dashboard statistics | None |
-| GET | `/api/health` | Health check | None |
-| GET | `/api/ready` | Readiness check (DB) | None |
+| GET | `/api/health` | Health check | Public |
+| GET | `/api/ready` | Readiness check | Public |
 
-## Smart Matching Algorithm
+## Setup
 
-The matching engine scores jobs against user profiles using five weighted factors:
-
-| Factor | Weight | Method |
-|---|---|---|
-| Technology overlap | 40% | Jaccard similarity of skills vs required/preferred tech |
-| Seniority match | 20% | Proximity of seniority levels (Junior→Director mapped to 0→5) |
-| Salary range | 15% | Intersection of desired vs offered salary ranges |
-| Location / Remote | 15% | Remote compatibility + city/state/country matching |
-| Job type | 10% | Full-time / Part-time / Contract / Internship match |
-
-Each factor returns a score (0–1) and a human-readable reason. Results are exposed via `/api/profile/matched/detailed` so users understand why a job was recommended.
-
-## Docker Compose (Development)
+### Docker (Recommended)
 
 ```bash
-docker compose up
-```
-
-| Service | Port | Purpose |
-|---|---|---|
-| postgres | 5433 | PostgreSQL 16 database |
-| redis | 6380 | Distributed cache |
-| mailpit | 8025 | Email testing UI |
-| api | 8080 | .NET backend |
-| client | 5173 | Vite dev server |
-| nginx | 80, 443 | Reverse proxy + TLS |
-| tests | — | Run `docker compose --profile test run tests` |
-
-## Setup Instructions
-
-### Prerequisites
-- .NET 10 SDK
-- PostgreSQL (local or via Docker)
-- Node.js 22+ (for frontend)
-
-### Quick Start (Docker)
-```bash
+# Clone and start
 git clone https://github.com/Sam1rShaban1/JobFinderNet.git
 cd JobFinderNet
-docker compose up
+
+# Create src/.env with your keys (see Environment Variables below)
+cp src/.env.example src/.env  # then edit with your keys
+
+# Start the full stack
+docker compose up -d
+
+# Run database migrations and seed
+docker compose exec api dotnet ef database update
 ```
 
-### Manual Setup
-```bash
-# Backend
-export PATH="$HOME/.dotnet10:$PATH"
-dotnet restore
-dotnet build
-dotnet run --project src/JobFinderNet.Api
+The app will be available at:
+- **Frontend:** http://localhost (via Nginx)
+- **API:** http://localhost:8080
+- **Mailpit (email testing):** http://localhost:8025
+- **PostgreSQL:** localhost:5433
+- **Redis:** localhost:6380
 
-# Frontend (separate terminal)
+### Local Development
+
+```bash
+# Prerequisites
+# - .NET 10 SDK
+# - PostgreSQL 16
+# - Redis 7
+# - Node.js 20+
+
+# Backend
+cd src
+dotnet restore
+dotnet run --project JobFinderNet.Api
+
+# Frontend
 cd client
 npm install
 npm run dev
 ```
 
 ### Run Tests
+
 ```bash
-dotnet test
-# or via Docker
-docker compose --profile test run tests
+# Local
+dotnet test src/JobFinderNet.Tests/
+
+# Docker
+docker compose --profile test run --rm tests
 ```
 
-## Default Accounts (seeded)
+## Environment Variables
+
+Create `src/.env`:
+
+```env
+# Clerk Authentication
+Clerk__Authority=https://your-clerk-instance.clerk.accounts.dev
+
+# JSearch API (job listings)
+JSearch__ApiKey=your-jsearch-api-key
+
+# NVIDIA AI (resume parsing, cover letters)
+Nvidia__ApiKey=your-nvidia-api-key
+
+# SMTP (email notifications)
+Smtp__Host=mailpit
+Smtp__Port=1025
+Smtp__Username=
+Smtp__Password=
+Smtp__From=noreply@jobfinder.local
+
+# PostgreSQL
+ConnectionStrings__DefaultConnection=Host=postgres;Database=JobFinderDb;Username=postgres;Password=postgres
+
+# Redis
+ConnectionStrings__Redis=redis:6379
+```
+
+## Database Schema
+
+Key tables (9 total plus Identity tables):
+
+| Table | Description |
+|---|---|
+| `jobs` | Job listings with technologies, salary, location |
+| `applications` | Job applications with status workflow |
+| `user_profiles` | User preferences (skills, seniority, salary, remote) |
+| `saved_jobs` | Bookmarked jobs |
+| `saved_searches` | Saved search filters (jsonb) |
+| `company_profiles` | Employer company pages |
+| `application_notes` | Employer notes on applications |
+| `pending_digests` | Queued digest emails |
+
+## Default Accounts (Seeded)
 
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@jobfinder.net | Admin123! |
 | Employer | employer@jobfinder.net | Employer123! |
 | Applicant | applicant@jobfinder.net | Applicant123! |
-
-## Documentation
-
-See the [`docs/`](docs/) folder for Mermaid architecture diagrams:
-- `architecture.mmd` — Full layered architecture
-- `er-diagram.mmd` — Entity-Relationship diagram
-- `auth-flow.mmd` — Clerk authentication sequence
-- `job-matching.mmd` — 5-factor matching algorithm flowchart
-- `application-flow.mmd` — Job application sequence
-- `resume-parsing.mmd` — AI resume parsing sequence
-- `system-overview.mmd` — High-level system map
-- `docker-architecture.mmd` — Docker + CI/CD pipeline
-- `notification-flow.mmd` — Email notification pipeline
-- `data-access-layer.mmd` — Repository pattern + DI
 
 ## Team
 
