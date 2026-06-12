@@ -44,7 +44,7 @@ export default function Navbar() {
           >
             Suggestions
           </Link>
-          {appUser?.role === 'Applicant' && (
+          {(appUser?.role === 'Applicant' || appUser?.role === 'Admin') && (
             <Link
               to="/my-applications"
               className={`nav-link${isActive('/my-applications') ? ' active' : ''}`}
