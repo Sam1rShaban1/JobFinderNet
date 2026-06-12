@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { SkeletonList } from '../components/Skeleton'
+import ApplicationNotesPanel from '../components/ApplicationNotesPanel'
+import { useAppUser } from '../context/AppContext'
 
 interface Application {
   id: number
@@ -20,10 +22,18 @@ const COLUMNS = [
 ]
 
 export default function MyApplications() {
+  const { user } = useAppUser()
   const [apps, setApps] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [draggedId, setDraggedId] = useState<number | null>(null)
+  const [expandedNotes, setExpandedNotes] = useState<number | null>(null)
+
+  const canSeeNotes = user?.role === 'Employer' || user?.role === 'Admin'
+
+  const toggleNotes = (appId: number) => {
+    setExpandedNotes(prev => prev === appId ? null : appId)
+  }
 
   const fetchApps = useCallback(async () => {
     setLoading(true)
@@ -129,6 +139,30 @@ export default function MyApplications() {
                       Applied {new Date(app.appliedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
                   </Link>
+                  {canSeeNotes && (
+                    <>
+                      <button
+                        onClick={() => toggleNotes(app.id)}
+                        style={{
+                          marginTop: 8,
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          color: 'var(--primary)',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        {expandedNotes === app.id ? '▲ Hide Notes' : '▼ Notes'}
+                      </button>
+                      {expandedNotes === app.id && (
+                        <ApplicationNotesPanel applicationId={app.id} />
+                      )}
+                    </>
+                  )}
                 </div>
               ))}
             </div>
