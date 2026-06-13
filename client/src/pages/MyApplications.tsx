@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { SkeletonList } from '../components/Skeleton'
@@ -51,7 +51,7 @@ export default function MyApplications() {
   useEffect(() => { fetchApps() }, [fetchApps])
 
   const handleDragStart = (e: React.DragEvent, id: number) => {
-    setDraggedId(id)
+    draggedId.current = id
     e.dataTransfer.effectAllowed = 'move'
   }
 
@@ -62,21 +62,19 @@ export default function MyApplications() {
 
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
-    if (draggedId === null) return
+    const id = draggedId.current
+    if (id === null) return
+    draggedId.current = null
 
-    const app = apps.find(a => a.id === draggedId)
-    if (!app || app.status === newStatus) {
-      setDraggedId(null)
-      return
-    }
+    const app = apps.find(a => a.id === id)
+    if (!app || app.status === newStatus) return
 
-    setDraggedId(null)
-    setApps(prev => prev.map(a => a.id === draggedId ? { ...a, status: newStatus } : a))
+    setApps(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a))
 
     try {
-      await api.put(`/applications/${draggedId}/status`, { status: newStatus })
+      await api.put(`/applications/${id}/status`, { status: newStatus })
     } catch {
-      setApps(prev => prev.map(a => a.id === draggedId ? { ...a, status: app.status } : a))
+      setApps(prev => prev.map(a => a.id === id ? { ...a, status: app.status } : a))
     }
   }
 
@@ -115,8 +113,8 @@ export default function MyApplications() {
             <div
               key={col.key}
               className="kanban-column"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, col.key)}
+              onDragOver={canDrag ? handleDragOver : undefined}
+              onDrop={canDrag ? (e) => handleDrop(e, col.key) : undefined}
             >
               <div className="kanban-column-header">
                 <span>{col.label}</span>
@@ -126,10 +124,11 @@ export default function MyApplications() {
                 <div
                   key={app.id}
                   className="kanban-card"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, app.id)}
+                  draggable={canDrag}
+                  onDragStart={canDrag ? (e) => handleDragStart(e, app.id) : undefined}
+                  style={{ cursor: canDrag ? 'grab' : 'default' }}
                 >
-                  <Link to={`/jobs/${app.jobId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <Link to={`/jobs/${app.jobId}`} draggable={false} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div className="kanban-card-title">{app.job.title}</div>
                     <div className="kanban-card-company">{app.job.companyName}</div>
                     {app.job.location && (
