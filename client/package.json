@@ -13,6 +13,7 @@
     "@clerk/react": "^6.7.1",
     "@clerk/themes": "^2.4.57",
     "axios": "^1.16.1",
+    "ogl": "^1.0.11",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hot-toast": "^2.6.0",

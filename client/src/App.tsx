@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
 import ErrorBoundary from './components/ErrorBoundary'
+import Iridescence from './components/Iridescence'
 import StatsCounter from './components/StatsCounter'
 import { AppProvider } from './context/AppContext'
 import Jobs from './pages/Jobs'
@@ -33,6 +34,11 @@ function Home() {
   return (
     <>
       <section className="hero-section">
+        <Iridescence
+          mouseReact
+          amplitude={0.1}
+          speed={0.8}
+        />
         <p className="micro" style={{ marginBottom: 24, color: '#616161' }}>JobFinderNet</p>
         <h1>Find your<br />next opportunity</h1>
         <p className="subtitle">
