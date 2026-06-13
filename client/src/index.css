@@ -469,6 +469,16 @@ h4, .h4 {
   margin: 0 auto var(--space-xxl);
 }
 
+.hero-label {
+  margin-bottom: 24px;
+  color: var(--ink);
+  opacity: 0.55;
+}
+
+[data-theme="dark"] .hero-label {
+  opacity: 0.6;
+}
+
 .hero-actions {
   display: flex;
   gap: var(--space-lg);

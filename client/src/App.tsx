@@ -39,7 +39,7 @@ function Home() {
           amplitude={0.1}
           speed={0.8}
         />
-        <p className="micro" style={{ marginBottom: 24, color: '#616161' }}>JobFinderNet</p>
+        <p className="micro hero-label">JobFinderNet</p>
         <h1>Find your<br />next opportunity</h1>
         <p className="subtitle">
           Connect with top employers and discover career-defining roles
