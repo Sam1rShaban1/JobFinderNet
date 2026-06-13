@@ -63,7 +63,7 @@ function Home() {
       <div className="container">
         <StatsCounter />
 
-        <div className="trust-strip">
+        {/* <div className="trust-strip">
           <span className="micro">Trusted by leading companies</span>
           <div className="trust-logos">
             <span className="trust-logo" style={{ fontWeight: 700 }}>Stripe</span>
@@ -73,7 +73,7 @@ function Home() {
             <span className="trust-logo" style={{ fontWeight: 700 }}>Notion</span>
             <span className="trust-logo" style={{ fontWeight: 600, letterSpacing: '0.5px' }}>Ramp</span>
           </div>
-        </div>
+        </div> */}
 
         <div className="feature-grid">
           <div className="feature-card">
