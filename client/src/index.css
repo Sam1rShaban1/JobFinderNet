@@ -57,6 +57,33 @@
   --space-section: 80px;
 }
 
+/* ---- Dark theme ----
+   Only color tokens are remapped; layout/spacing/radius stay the same,
+   so every component that uses these variables flips automatically. */
+[data-theme="dark"] {
+  --canvas: #0e0e11;        /* page + card surface */
+  --ink: #e9e9ec;           /* primary body text */
+  --primary: #f4f4f5;       /* headings, primary button bg, brand */
+  --on-primary: #14141a;    /* text on the (now light) primary button */
+  --soft-stone: #1b1b21;    /* hover / subtle elevated surface */
+  --hairline: #2b2b33;      /* borders / dividers */
+  --border-light: #2b2b33;
+  --card-border: #242430;
+  --muted: #8b8b95;
+  --slate: #9b9bab;
+  --body-muted: #a6a6b0;
+  --action-blue: #5b8def;   /* lighten links for contrast on dark */
+}
+
+/* Targeted fixes where a token doubles as a dark surface in light mode */
+[data-theme="dark"] .footer {
+  background: #000000;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #d7d7db;
+  border-color: #d7d7db;
+}
+
 /* ---- Reset ---- */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -220,6 +247,29 @@ h4, .h4 {
 
 .nav-auth {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.theme-toggle:hover {
+  border-color: var(--primary);
+  background: var(--soft-stone);
 }
 
 .nav-user {
