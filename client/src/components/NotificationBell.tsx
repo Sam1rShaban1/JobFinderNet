@@ -111,10 +111,11 @@ export default function NotificationBell() {
           width: 360,
           maxHeight: 400,
           overflowY: 'auto',
-          background: '#fff',
+          background: 'var(--canvas)',
+          color: 'var(--ink)',
           border: '1px solid var(--hairline)',
           borderRadius: 12,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
           zIndex: 200,
           marginTop: 8,
         }}>
@@ -125,7 +126,7 @@ export default function NotificationBell() {
             padding: '12px 16px',
             borderBottom: '1px solid var(--hairline)',
           }}>
-            <span style={{ fontWeight: 600, fontSize: 14 }}>Notifications</span>
+            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>Notifications</span>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
@@ -156,7 +157,7 @@ export default function NotificationBell() {
                   padding: '12px 16px',
                   borderBottom: '1px solid var(--hairline)',
                   cursor: n.link ? 'pointer' : 'default',
-                  background: n.isRead ? 'transparent' : 'var(--pale-blue)',
+                  background: n.isRead ? 'transparent' : 'rgba(91, 141, 239, 0.14)',
                   transition: 'background 0.15s',
                 }}
               >
@@ -183,13 +184,13 @@ export default function NotificationBell() {
 function NotificationContent({ notification }: { notification: Notification }) {
   return (
     <div>
-      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2, color: 'var(--primary)' }}>
+      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2, color: 'var(--ink)' }}>
         {notification.title}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--body-muted)' }}>
+      <div style={{ fontSize: 13, color: 'var(--ink)', opacity: 0.85 }}>
         {notification.message}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+      <div style={{ fontSize: 11, color: 'var(--body-muted)', marginTop: 4 }}>
         {new Date(notification.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
       </div>
     </div>

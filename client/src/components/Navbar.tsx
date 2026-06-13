@@ -7,6 +7,22 @@ import ResumeParserForm from './ResumeParserForm'
 import CoverLetterForm from './CoverLetterForm'
 import SavedSearchesForm from './SavedSearchesForm'
 import NotificationBell from './NotificationBell'
+import { useTheme } from '../context/ThemeContext'
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme()
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="theme-toggle"
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {theme === 'dark' ? '☀' : '☾'}
+    </button>
+  )
+}
 
 export default function Navbar() {
   const { isSignedIn, user: clerkUser } = useUser()
@@ -120,6 +136,7 @@ export default function Navbar() {
         {menuOpen && <div className="nav-overlay" onClick={closeMenu} />}
 
         <div className="nav-auth">
+          <ThemeToggle />
           {isSignedIn ? (
             <div className="nav-user">
               <NotificationBell />
