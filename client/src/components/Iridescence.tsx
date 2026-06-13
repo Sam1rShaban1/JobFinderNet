@@ -1,5 +1,5 @@
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 const vertexShader = `
 attribute vec2 uv;
@@ -38,9 +38,12 @@ void main() {
     d += sin(uv.y * i + a);
   }
   d += uTime * 0.5 * uSpeed;
-  vec3 col = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
-  col = cos(col * cos(vec3(d, a, 2.5)) * 0.5 + 0.5) * uColor;
-  gl_FragColor = vec4(col, 1.0);
+
+  float wave = cos(a + d) * 0.5 + 0.5;
+  wave = wave * 0.5 + 0.5;
+
+  float luma = wave * uColor.r;
+  gl_FragColor = vec4(vec3(luma), 1.0);
 }
 `;
 
@@ -49,7 +52,7 @@ function isDarkMode() {
 }
 
 function getThemeColor(): [number, number, number] {
-  return isDarkMode() ? [0.14, 0.14, 0.16] : [0.88, 0.87, 0.86];
+  return isDarkMode() ? [0.22, 0.22, 0.24] : [0.82, 0.81, 0.80];
 }
 
 function getClearColor(): [number, number, number, number] {
@@ -71,7 +74,7 @@ export default function Iridescence({
   const ctnDom = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0.5, y: 0.5 });
 
-  const initGL = useCallback(() => {
+  useEffect(() => {
     if (!ctnDom.current) return;
     const ctn = ctnDom.current;
     const renderer = new Renderer();
@@ -138,7 +141,7 @@ export default function Iridescence({
 
     const observer = new MutationObserver(() => {
       const dark = isDarkMode();
-      const c = dark ? [0.14, 0.14, 0.16] : [0.88, 0.87, 0.86];
+      const c = dark ? [0.22, 0.22, 0.24] : [0.82, 0.81, 0.80];
       const bg = dark ? [0.055, 0.055, 0.067, 1] : [1, 1, 1, 1];
       program.uniforms.uColor.value = new Color(c[0], c[1], c[2]);
       gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
@@ -156,11 +159,6 @@ export default function Iridescence({
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
   }, [speed, amplitude, mouseReact]);
-
-  useEffect(() => {
-    const cleanup = initGL();
-    return cleanup;
-  }, [initGL]);
 
   return <div ref={ctnDom} className="iridescence-container" {...rest} />;
 }
