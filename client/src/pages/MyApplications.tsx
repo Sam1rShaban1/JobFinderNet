@@ -26,10 +26,11 @@ export default function MyApplications() {
   const [apps, setApps] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [draggedId, setDraggedId] = useState<number | null>(null)
+  const draggedId = useRef<number | null>(null)
   const [expandedNotes, setExpandedNotes] = useState<number | null>(null)
 
   const canSeeNotes = user?.role === 'Employer' || user?.role === 'Admin'
+  const canDrag = user?.role === 'Employer' || user?.role === 'Admin'
 
   const toggleNotes = (appId: number) => {
     setExpandedNotes(prev => prev === appId ? null : appId)
