@@ -45,12 +45,12 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
-          passphrase: ${{ secrets.AWS_SSH_PASSPHRASE }}
           script: |
             if [ ! -d /home/samir/JobFinderNet ]; then
-              git clone https://github.com/Sam1rShaban1/JobFinderNet.git /home/samir/JobFinderNet
+              git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sam1rShaban1/JobFinderNet.git /home/samir/JobFinderNet
             fi
             cd /home/samir/JobFinderNet
+            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sam1rShaban1/JobFinderNet.git
             git pull origin main
             docker compose down
             docker compose build --no-cache
