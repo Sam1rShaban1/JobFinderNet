@@ -2,15 +2,11 @@ name: Build, Test, and Deploy
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
     branches: [main]
   workflow_dispatch:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  AZURE_WEBAPP_NAME: 'jobfindernet'
-  AZURE_WEBAPP_PACKAGE_PATH: 'src/JobFinderNet.Api/publish'
 
 jobs:
   build-and-test:
@@ -34,43 +30,24 @@ jobs:
       - name: Run tests
         run: dotnet test --no-restore --configuration Release --verbosity normal
 
-      - name: Publish API
-        run: dotnet publish src/JobFinderNet.Api/JobFinderNet.Api.csproj \
-          --no-restore \
-          --configuration Release \
-          --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: webapp
-          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
   deploy:
-    name: Deploy to Azure
+    name: Deploy to EC2
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: webapp
-          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v2
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Deploy to Azure App Service
-        id: deploy
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
-      - name: Azure logout
-        run: |
-          az logout
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            cd ~/JobFinderNet
+            git pull origin main
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d

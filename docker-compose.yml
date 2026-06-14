@@ -87,7 +87,7 @@ services:
         condition: service_started
     ports:
       - "8080:80"
-      - "443:443"
+      - "4433:443"
     environment:
       - CLIENT_PORT=${CLIENT_PORT:-5173}
       - DOMAIN=${DOMAIN:-localhost}
