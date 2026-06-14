@@ -46,10 +46,10 @@ jobs:
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            if [ ! -d /home/samir/JobFinderNet ]; then
-              git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sam1rShaban1/JobFinderNet.git /home/samir/JobFinderNet
+            if [ ! -d /home/ubuntu/JobFinderNet ]; then
+              git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sam1rShaban1/JobFinderNet.git /home/ubuntu/JobFinderNet
             fi
-            cd /home/samir/JobFinderNet
+            cd /home/ubuntu/JobFinderNet
             git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sam1rShaban1/JobFinderNet.git
             git pull origin main
             docker compose down
