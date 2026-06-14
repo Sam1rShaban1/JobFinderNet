@@ -45,8 +45,9 @@ jobs:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USERNAME }}
           key: ${{ secrets.AWS_SSH_KEY }}
+          passphrase: ${{ secrets.AWS_SSH_PASSPHRASE }}
           script: |
-            cd /home/samir/JobFinderNet
+            cd /home/samir/
             git pull origin main
             docker compose down
             docker compose build --no-cache
