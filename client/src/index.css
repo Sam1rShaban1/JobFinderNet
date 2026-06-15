@@ -83,6 +83,10 @@
   background: #d7d7db;
   border-color: #d7d7db;
 }
+[data-theme="dark"] {
+  --pale-green: #0d2a1f;
+  --pale-blue: #0d1733;
+}
 
 /* ---- Reset ---- */
 *, *::before, *::after {
@@ -1752,5 +1756,251 @@ main > * {
 @media (max-width: 640px) {
   .kanban-board {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Job Card as Link ---- */
+a.job-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  cursor: pointer;
+}
+a.job-card:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- Resume Banner ---- */
+.resume-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: 14px var(--space-xl);
+  background: var(--pale-blue);
+  border: 1px solid var(--action-blue);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-xl);
+  font-size: 14px;
+  color: var(--ink);
+  flex-wrap: wrap;
+}
+.resume-banner strong {
+  color: var(--action-blue);
+}
+
+/* ---- Filter Chips ---- */
+.filter-chips {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.filter-chip:hover {
+  border-color: var(--primary);
+}
+.filter-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+/* ---- Sort Toolbar ---- */
+.sort-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: 10px var(--space-lg);
+  background: var(--soft-stone);
+  border-radius: var(--radius-sm);
+  position: sticky;
+  top: 65px;
+  z-index: 10;
+}
+
+.sort-select {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-full);
+  background: var(--canvas);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink);
+  padding: 4px 10px;
+  cursor: pointer;
+  outline: none;
+}
+.sort-select:focus {
+  border-color: var(--form-focus);
+}
+
+/* ---- Empty State ---- */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 40px;
+  gap: var(--space-lg);
+}
+.empty-state-icon {
+  font-size: 40px;
+  color: var(--hairline);
+  line-height: 1;
+}
+.empty-state h3 {
+  font-size: 20px;
+  color: var(--primary);
+}
+.empty-state p {
+  font-size: 14px;
+  color: var(--body-muted);
+  max-width: 320px;
+}
+
+/* ---- Matched For You Section ---- */
+.matched-section {
+  background: var(--pale-green);
+  border: 1px solid rgba(0, 60, 51, 0.12);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xxl);
+}
+.matched-section-title {
+  font-size: 20px;
+  margin-bottom: var(--space-lg);
+  color: var(--deep-green);
+}
+.matched-section .job-card {
+  background: var(--canvas);
+}
+
+/* ---- Kanban Drag-Over Highlight ---- */
+.kanban-column.drag-over {
+  background: var(--pale-blue);
+  outline: 2px dashed var(--action-blue);
+  outline-offset: -2px;
+}
+.kanban-column.drag-over .kanban-column-header {
+  color: var(--action-blue);
+}
+
+/* ---- Company Avatar (logo fallback) ---- */
+.company-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* ---- Employer Sidebar Layout ---- */
+.employer-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 64px);
+  align-items: start;
+}
+
+.employer-sidebar {
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  border-right: 1px solid var(--hairline);
+  padding: var(--space-xxl) 0;
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.employer-sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0 var(--space-xl) var(--space-md);
+}
+
+.employer-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px var(--space-xl);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.employer-sidebar-link:hover {
+  background: var(--soft-stone);
+  color: var(--primary);
+  text-decoration: none;
+}
+.employer-sidebar-link.active {
+  color: var(--primary);
+  border-left-color: var(--primary);
+  background: var(--soft-stone);
+}
+
+.employer-content {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .employer-layout {
+    grid-template-columns: 1fr;
+  }
+  .employer-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--hairline);
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: var(--space-md) var(--space-lg);
+    gap: 0;
+  }
+  .employer-sidebar-label {
+    display: none;
+  }
+  .employer-sidebar-link {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+  }
+  .employer-sidebar-link.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--primary);
   }
 }

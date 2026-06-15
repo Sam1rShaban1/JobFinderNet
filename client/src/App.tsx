@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useUser, SignIn, SignUp } from '@clerk/react'
 import Navbar from './components/Navbar'
+import EmployerLayout from './components/EmployerLayout'
 import ErrorBoundary from './components/ErrorBoundary'
 import Iridescence from './components/Iridescence'
 import StatsCounter from './components/StatsCounter'
@@ -132,7 +133,7 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 export default function App() {
   return (
     <AppProvider>
-      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       <Navbar />
       <main style={{ flex: 1 }}>
         <ErrorBoundary>
@@ -144,7 +145,7 @@ export default function App() {
             <Route path="/jobs/:id" element={<JobDetails />} />
             <Route path="/suggestions" element={<Suggestions />} />
             <Route path="/create-job" element={
-              <ProtectedRoute><CreateJob /></ProtectedRoute>
+              <ProtectedRoute><EmployerLayout><CreateJob /></EmployerLayout></ProtectedRoute>
             } />
             <Route path="/my-applications" element={
               <ProtectedRoute><MyApplications /></ProtectedRoute>
@@ -160,13 +161,13 @@ export default function App() {
               <ProtectedRoute><ClaimCompany /></ProtectedRoute>
             } />
             <Route path="/my-jobs" element={
-              <ProtectedRoute><MyJobs /></ProtectedRoute>
+              <ProtectedRoute><EmployerLayout><MyJobs /></EmployerLayout></ProtectedRoute>
             } />
             <Route path="/employer-dashboard" element={
-              <ProtectedRoute><EmployerDashboard /></ProtectedRoute>
+              <ProtectedRoute><EmployerLayout><EmployerDashboard /></EmployerLayout></ProtectedRoute>
             } />
             <Route path="/edit-job/:id" element={
-              <ProtectedRoute><CreateJob /></ProtectedRoute>
+              <ProtectedRoute><EmployerLayout><CreateJob /></EmployerLayout></ProtectedRoute>
             } />
             <Route path="/admin" element={
               <ProtectedRoute><Admin /></ProtectedRoute>

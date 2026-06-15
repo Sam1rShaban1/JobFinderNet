@@ -30,7 +30,8 @@ export default function MyApplications() {
   const [expandedNotes, setExpandedNotes] = useState<number | null>(null)
 
   const canSeeNotes = user?.role === 'Employer' || user?.role === 'Admin'
-  const canDrag = user?.role === 'Employer' || user?.role === 'Admin'
+  const canDrag = true
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
 
   const toggleNotes = (appId: number) => {
     setExpandedNotes(prev => prev === appId ? null : appId)
@@ -56,13 +57,19 @@ export default function MyApplications() {
     e.dataTransfer.effectAllowed = 'move'
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, colKey: string) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
+    setDragOverColumn(colKey)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null)
   }
 
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
+    setDragOverColumn(null)
     const id = draggedId.current
     if (id === null) return
     draggedId.current = null
@@ -104,18 +111,21 @@ export default function MyApplications() {
           <button className="btn btn-outline" onClick={fetchApps}>Retry</button>
         </div>
       ) : apps.length === 0 ? (
-        <p style={{ color: '#616161' }}>
-          You haven't applied to any jobs yet.{' '}
-          <Link to="/jobs">Browse jobs</Link> to get started.
-        </p>
+        <div className="empty-state">
+          <div className="empty-state-icon">&#9632;</div>
+          <h3>No applications yet</h3>
+          <p>Apply to jobs to track your progress here on the kanban board.</p>
+          <Link to="/jobs" className="btn btn-outline">Browse Jobs</Link>
+        </div>
       ) : (
         <div className="kanban-board">
           {grouped.map(col => (
             <div
               key={col.key}
-              className="kanban-column"
-              onDragOver={canDrag ? handleDragOver : undefined}
-              onDrop={canDrag ? (e) => handleDrop(e, col.key) : undefined}
+              className={`kanban-column${dragOverColumn === col.key ? ' drag-over' : ''}`}
+              onDragOver={(e) => handleDragOver(e, col.key)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, col.key)}
             >
               <div className="kanban-column-header">
                 <span>{col.label}</span>

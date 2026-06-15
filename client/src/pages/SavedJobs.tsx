@@ -68,11 +68,16 @@ export default function SavedJobs() {
       </div>
 
       {saved.length === 0 ? (
-        <p style={{ color: '#616161' }}>No saved jobs yet. Browse jobs and click the heart icon to save them.</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">&#9825;</div>
+          <h3>No saved jobs yet</h3>
+          <p>Browse jobs and click the heart icon to save positions you're interested in.</p>
+          <Link to="/jobs" className="btn btn-outline">Browse Jobs</Link>
+        </div>
       ) : (
         <div className="job-grid">
           {saved.map((s) => (
-            <div key={s.id} className="job-card">
+            <Link key={s.id} to={`/jobs/${s.job.id}`} className="job-card">
               <div className="job-card-header">
                 <h3>{s.job.title}</h3>
                 <span className={`badge ${s.job.jobType.toLowerCase()}`}>{s.job.jobType}</span>
@@ -87,10 +92,15 @@ export default function SavedJobs() {
                 <p className="date">{new Date(s.job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
               </div>
               <div style={{ display: 'flex', gap: 8, alignSelf: 'flex-start' }}>
-                <Link to={`/jobs/${s.job.id}`} className="btn btn-outline btn-sm">View Details</Link>
-                <button className="btn btn-text btn-sm" onClick={() => unsave(s.jobId)} style={{ color: '#e44' }}>Unsave</button>
+                <button
+                  className="btn btn-text btn-sm"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); unsave(s.jobId) }}
+                  style={{ color: '#e44' }}
+                >
+                  Unsave
+                </button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

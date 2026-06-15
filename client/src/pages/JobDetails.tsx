@@ -65,6 +65,38 @@ interface Job {
   sourceUrl: string | null
 }
 
+function LogoWithFallback({ src, name }: { src: string; name: string }) {
+  const [errored, setErrored] = useState(false)
+  if (errored) return <CompanyAvatar name={name} />
+  return <img src={src} alt="" style={{ width: 32, height: 32, borderRadius: 6 }} onError={() => setErrored(true)} />
+}
+
+function formatSalaryText(salary: string): string {
+  return salary.replace(/\$(\d+)\s*-\s*\$(\d+)/g, (_, a, b) => {
+    const fmt = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`
+    return `${fmt(+a)} - ${fmt(+b)}`
+  })
+}
+
+const AVATAR_COLORS = [
+  '#1863dc', '#003c33', '#7c3aed', '#c2410c', '#0369a1',
+]
+
+function CompanyAvatar({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+  const color = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]
+  return (
+    <span className="company-avatar" style={{ background: color }}>
+      {initials}
+    </span>
+  )
+}
+
 function titleCase(str: string): string {
   return str.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
 }
@@ -203,9 +235,10 @@ export default function JobDetails() {
             </div>
             <h1>{job.title}</h1>
             <p className="company" style={{ fontSize: 28, marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-              {job.employerLogo && (
-                <img src={job.employerLogo} alt="" style={{ width: 32, height: 32, borderRadius: 6 }} />
-              )}
+              {job.employerLogo
+                ? <LogoWithFallback src={job.employerLogo} name={job.companyName} />
+                : <CompanyAvatar name={job.companyName} />
+              }
               {job.companyName}
             </p>
           </div>
@@ -330,7 +363,7 @@ export default function JobDetails() {
               <h3>Similar Jobs</h3>
               <div className="job-grid" style={{ marginTop: 16 }}>
                 {similarJobs.map((sj) => (
-                  <div key={sj.id} className="job-card">
+                  <Link key={sj.id} to={`/jobs/${sj.id}`} className="job-card">
                     <div className="job-card-header">
                       <h3 style={{ fontSize: 16 }}>{sj.title}</h3>
                       <span className={`badge ${sj.jobType.toLowerCase()}`}>{sj.jobType}</span>
@@ -339,11 +372,11 @@ export default function JobDetails() {
                       <p className="company">{sj.companyName}</p>
                       <p className="meta">
                         <span>{sj.location}</span>
+                        {sj.salary && <span>{formatSalaryText(sj.salary)}</span>}
                       </p>
                       <p className="date">{new Date(sj.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                     </div>
-                    <Link to={`/jobs/${sj.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

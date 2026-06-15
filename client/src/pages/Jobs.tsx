@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@clerk/react'
 import { useAppUser } from '../context/AppContext'
@@ -42,24 +42,42 @@ function ScoreBadge({ score }: { score: number }) {
       fontWeight: 600,
       color,
       background: bg,
+      whiteSpace: 'nowrap',
     }}>
       {score}% match
     </span>
   )
 }
 
+const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship']
+
 export default function Jobs() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [jobs, setJobs] = useState<Job[]>([])
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([])
+  const [inputValue, setInputValue] = useState(searchParams.get('search') || '')
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
+  const [remoteOnly, setRemoteOnly] = useState(false)
+  const [jobTypeFilter, setJobTypeFilter] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
+  const [hasProfile, setHasProfile] = useState(true)
   const { user } = useAppUser()
   const { isSignedIn } = useAuth()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearchChange = (value: string) => {
+    setInputValue(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearch(value)
+      setPage(1)
+    }, 300)
+  }
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -67,7 +85,7 @@ export default function Jobs() {
       setError('')
       try {
         const url = search
-          ? `/jobs/search?query=${search}`
+          ? `/jobs/search?query=${encodeURIComponent(search)}`
           : `/jobs?page=${page}&pageSize=12`
         const res = await api.get(url)
         if (search) {
@@ -76,7 +94,7 @@ export default function Jobs() {
           setJobs(res.data.items)
           setTotalPages(res.data.totalPages)
         }
-      } catch (err: any) {
+      } catch {
         setError('Failed to load jobs. Please try again.')
       } finally {
         setLoading(false)
@@ -90,21 +108,29 @@ export default function Jobs() {
       setMatchedJobs([])
       return
     }
-    const fetchMatched = async () => {
-      try {
-        const res = await api.get('/profile/matched?limit=6')
-        setMatchedJobs(res.data)
-      } catch {
-        // not critical
-      }
-    }
-    fetchMatched()
+    api.get('/profile/matched?limit=6')
+      .then((res) => { setMatchedJobs(res.data); setHasProfile(true) })
+      .catch((err) => { if (err.response?.status === 404) setHasProfile(false) })
   }, [isSignedIn])
 
   useEffect(() => {
     if (!isSignedIn) return
     api.get('/savedjobs/ids').then((res) => setSavedIds(new Set(res.data))).catch(() => {})
   }, [isSignedIn])
+
+  const filteredJobs = jobs
+    .filter(j => !remoteOnly || j.isRemote)
+    .filter(j => !jobTypeFilter || j.jobType.toLowerCase() === jobTypeFilter.toLowerCase())
+    .sort((a, b) => {
+      if (sortBy === 'newest') return new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime()
+      if (sortBy === 'oldest') return new Date(a.postedDate).getTime() - new Date(b.postedDate).getTime()
+      return 0
+    })
+
+  const showResumeBanner = isSignedIn && !hasProfile && user?.role !== 'Employer' && user?.role !== 'Admin'
+
+  const savedIdsHandler = (jobId: number) => (saved: boolean) =>
+    setSavedIds(prev => { const n = new Set(prev); saved ? n.add(jobId) : n.delete(jobId); return n })
 
   return (
     <div className="container">
@@ -115,13 +141,58 @@ export default function Jobs() {
         )}
       </div>
 
+      {showResumeBanner && (
+        <div className="resume-banner">
+          <div>
+            <strong>Unlock AI job matching</strong>
+            <span> — upload your resume to see personalized match scores on every job.</span>
+          </div>
+          <Link to="/suggestions" className="btn btn-primary btn-sm">Set Up Profile</Link>
+        </div>
+      )}
+
       <div className="search-bar">
         <input
           type="text"
           placeholder="Search jobs by title, company, or description..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          value={inputValue}
+          onChange={(e) => handleSearchChange(e.target.value)}
         />
+      </div>
+
+      <div className="filter-chips">
+        <button
+          className={`filter-chip${remoteOnly ? ' active' : ''}`}
+          onClick={() => setRemoteOnly(v => !v)}
+        >
+          Remote
+        </button>
+        {JOB_TYPES.map(type => (
+          <button
+            key={type}
+            className={`filter-chip${jobTypeFilter === type ? ' active' : ''}`}
+            onClick={() => setJobTypeFilter(prev => prev === type ? '' : type)}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
+      <div className="sort-toolbar">
+        <span className="micro">Sort by</span>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="sort-select"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        {(remoteOnly || jobTypeFilter) && (
+          <span className="micro" style={{ marginLeft: 'auto' }}>
+            {filteredJobs.length} of {jobs.length} jobs
+          </span>
+        )}
       </div>
 
       {error && (
@@ -136,28 +207,24 @@ export default function Jobs() {
       ) : (
         <>
           {matchedJobs.length > 0 && (
-            <div style={{ marginBottom: 40 }}>
-              <h2 style={{ fontSize: 24, marginBottom: 16 }}>Matched for You</h2>
+            <div className="matched-section">
+              <h2 className="matched-section-title">Matched for You</h2>
               <div className="job-grid">
                 {matchedJobs.map((job) => (
-              <div key={`matched-${job.id}`} className="job-card">
-                <div className="job-card-header">
-                  <h3>{job.title}</h3>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <ScoreBadge score={job.score} />
-                    {isSignedIn && (
-                      <HeartButton
-                        jobId={job.id}
-                        initialSaved={savedIds.has(job.id)}
-                        onChange={(s) => setSavedIds(prev => {
-                          const next = new Set(prev)
-                          if (s) next.add(job.id); else next.delete(job.id)
-                          return next
-                        })}
-                      />
-                    )}
-                  </div>
-                </div>
+                  <Link key={`matched-${job.id}`} to={`/jobs/${job.id}`} className="job-card">
+                    <div className="job-card-header">
+                      <h3>{job.title}</h3>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <ScoreBadge score={job.score} />
+                        {isSignedIn && (
+                          <HeartButton
+                            jobId={job.id}
+                            initialSaved={savedIds.has(job.id)}
+                            onChange={savedIdsHandler(job.id)}
+                          />
+                        )}
+                      </div>
+                    </div>
                     <div className="job-card-body">
                       <p className="company">{job.companyName}</p>
                       <p className="meta">
@@ -167,16 +234,15 @@ export default function Jobs() {
                       </p>
                       <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                     </div>
-                    <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
           )}
 
           <div className="job-grid">
-            {jobs.map((job) => (
-              <div key={job.id} className="job-card">
+            {filteredJobs.map((job) => (
+              <Link key={job.id} to={`/jobs/${job.id}`} className="job-card">
                 <div className="job-card-header">
                   <h3>{job.title}</h3>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -185,11 +251,7 @@ export default function Jobs() {
                       <HeartButton
                         jobId={job.id}
                         initialSaved={savedIds.has(job.id)}
-                        onChange={(s) => setSavedIds(prev => {
-                          const next = new Set(prev)
-                          if (s) next.add(job.id); else next.delete(job.id)
-                          return next
-                        })}
+                        onChange={savedIdsHandler(job.id)}
                       />
                     )}
                   </div>
@@ -203,10 +265,31 @@ export default function Jobs() {
                   </p>
                   <p className="date">{new Date(job.postedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-                <Link to={`/jobs/${job.id}`} className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }}>View Details</Link>
-              </div>
+              </Link>
             ))}
-            {jobs.length === 0 && <p className="no-results">No jobs found.</p>}
+            {filteredJobs.length === 0 && (
+              <div className="empty-state">
+                <div className="empty-state-icon">&#9670;</div>
+                <h3>No jobs found</h3>
+                <p>
+                  {search
+                    ? `No results for "${search}".`
+                    : 'Try adjusting your filters.'}
+                </p>
+                {(search || remoteOnly || jobTypeFilter) && (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      handleSearchChange('')
+                      setRemoteOnly(false)
+                      setJobTypeFilter('')
+                    }}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}
