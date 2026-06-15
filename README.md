@@ -194,6 +194,7 @@ git clone https://github.com/Sam1rShaban1/JobFinderNet.git
 cd JobFinderNet
 
 # Create src/.env with your keys (see Environment Variables below)
+cp client/.env.example client/.env  # then edit with your keys
 cp src/.env.example src/.env  # then edit with your keys
 
 # Start the full stack
