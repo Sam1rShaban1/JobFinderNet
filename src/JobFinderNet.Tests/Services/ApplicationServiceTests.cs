@@ -1,10 +1,7 @@
 using Moq;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using JobFinderNet.Core.Models;
 using JobFinderNet.Core.Interfaces.Repositories;
-using JobFinderNet.Core.Interfaces.Services;
-using JobFinderNet.Infrastructure.Data;
 using JobFinderNet.Infrastructure.Services;
 using JobFinderNet.Tests.Helpers;
 
@@ -14,29 +11,28 @@ public class ApplicationServiceTests
 {
     private readonly Mock<IJobRepository> _mockJobRepo;
     private readonly Mock<IApplicationRepository> _mockAppRepo;
+    private readonly Mock<IApplicationNoteRepository> _mockAppNoteRepo;
+    private readonly Mock<INotificationRepository> _mockNotificationRepo;
     private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
-    private readonly Mock<INotificationService> _mockNotificationService;
-    private readonly ApplicationDbContext _context;
     private readonly ApplicationService _service;
 
     public ApplicationServiceTests()
     {
         _mockJobRepo = new Mock<IJobRepository>();
         _mockAppRepo = new Mock<IApplicationRepository>();
+        _mockAppNoteRepo = new Mock<IApplicationNoteRepository>();
+        _mockNotificationRepo = new Mock<INotificationRepository>();
 
         var store = new Mock<IUserStore<ApplicationUser>>();
         _mockUserManager = new Mock<UserManager<ApplicationUser>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
-        _mockNotificationService = new Mock<INotificationService>();
-        _context = TestDbContextFactory.CreateInMemoryDbContext();
-
         _service = new ApplicationService(
             _mockJobRepo.Object,
             _mockAppRepo.Object,
-            _mockUserManager.Object,
-            _context,
-            _mockNotificationService.Object);
+            _mockAppNoteRepo.Object,
+            _mockNotificationRepo.Object,
+            _mockUserManager.Object);
     }
 
     [Fact]
@@ -56,12 +52,6 @@ public class ApplicationServiceTests
 
         Assert.True(result.Succeeded);
         Assert.Equal("Application submitted successfully", result.Message);
-        _mockNotificationService.Verify(
-            n => n.SendApplicationSubmittedAsync("app@test.com", "app@test.com", "Test Job", "Test Corp"),
-            Times.Once);
-        _mockNotificationService.Verify(
-            n => n.SendNewApplicationToEmployerAsync("emp@test.com", "Test Company", "app@test.com", "Test Job"),
-            Times.Once);
     }
 
     [Fact]

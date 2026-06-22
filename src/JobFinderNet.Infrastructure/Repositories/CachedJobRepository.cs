@@ -133,6 +133,31 @@ public class CachedJobRepository : IJobRepository
         return await _inner.JobExists(id);
     }
 
+    public async Task<List<Job>> GetSimilarJobsAsync(int jobId, string? industry, string companyName, List<string> technologies, int limit = 6)
+    {
+        return await _inner.GetSimilarJobsAsync(jobId, industry, companyName, technologies, limit);
+    }
+
+    public async Task<List<Job>> GetJobsWithoutTechnologiesAsync()
+    {
+        return await _inner.GetJobsWithoutTechnologiesAsync();
+    }
+
+    public async Task<List<Job>> GetAllActiveJobsAsync()
+    {
+        return await _inner.GetAllActiveJobsAsync();
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _inner.GetCountAsync();
+    }
+
+    public async Task<Dictionary<string, int>> GetJobsByTypeAsync()
+    {
+        return await _inner.GetJobsByTypeAsync();
+    }
+
     private async Task InvalidateJobListsAsync()
     {
         await _cache.RemoveByPrefixAsync(JobsPrefix);

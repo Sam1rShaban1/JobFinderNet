@@ -29,7 +29,6 @@ if (!isTesting)
 
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-    // Redis distributed cache
     var redisConnection = builder.Configuration.GetConnectionString("Redis")
         ?? throw new InvalidOperationException("Redis connection string not found.");
     builder.Services.AddStackExchangeRedisCache(options =>
@@ -43,9 +42,9 @@ if (!isTesting)
 }
 else
 {
-    // Testing: InMemory DB + memory cache are registered by TestWebApplicationFactory
 }
 
+// Repositories
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IJobRepository>(sp =>
 {
@@ -55,12 +54,26 @@ builder.Services.AddScoped<IJobRepository>(sp =>
 });
 builder.Services.AddScoped<JobRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ISavedJobRepository, SavedJobRepository>();
+builder.Services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+builder.Services.AddScoped<ICompanyProfileRepository, CompanyProfileRepository>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+builder.Services.AddScoped<IApplicationNoteRepository, ApplicationNoteRepository>();
+
+// Services
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMatchingService, MatchingService>();
 builder.Services.AddScoped<IAiService, AiService>();
+builder.Services.AddScoped<INotificationAppService, NotificationAppService>();
+builder.Services.AddScoped<ISavedJobService, SavedJobService>();
+builder.Services.AddScoped<ISavedSearchService, SavedSearchService>();
+builder.Services.AddScoped<ICompanyProfileService, CompanyProfileService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddScoped<IEmailService, SmtpEmailSender>();
@@ -178,7 +191,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                             identity.AddClaim(new Claim(ClaimTypes.Role, role));
                         }
 
-                        // Add email_verified claim from Clerk JWT
                         var emailVerified = context.Principal?.FindFirst("email_verified")?.Value;
                         if (emailVerified == "true" || appUser.EmailConfirmed)
                         {

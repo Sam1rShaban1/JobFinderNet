@@ -2,37 +2,25 @@ using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using JobFinderNet.Core.Models;
-using JobFinderNet.Core.Interfaces.Repositories;
-using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Api.Controllers;
 
 namespace JobFinderNet.Tests.Controllers;
 
 public class JobsControllerTests
 {
-    private readonly Mock<IJobRepository> _mockJobRepo;
-    private readonly Mock<IApplicationRepository> _mockAppRepo;
+    private readonly Mock<IJobService> _mockJobService;
     private readonly JobsController _controller;
 
     public JobsControllerTests()
     {
-        _mockJobRepo = new Mock<IJobRepository>();
-        _mockAppRepo = new Mock<IApplicationRepository>();
-
-        var mockDbContext = new Mock<ApplicationDbContext>(
-            new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase($"Test_{Guid.NewGuid()}")
-                .Options);
+        _mockJobService = new Mock<IJobService>();
 
         _controller = new JobsController(
-            _mockJobRepo.Object,
-            _mockAppRepo.Object,
-            null!,
-            new Mock<ILogger<JobsController>>().Object,
-            mockDbContext.Object);
+            _mockJobService.Object,
+            new Mock<ILogger<JobsController>>().Object);
 
         var claims = new List<Claim>
         {
@@ -51,7 +39,7 @@ public class JobsControllerTests
     public async Task GetJobs_ReturnsOkResult()
     {
         var paginatedList = new PaginatedList<Job>(new List<Job>(), 0, 1, 12);
-        _mockJobRepo.Setup(r => r.GetPaginatedJobsAsync(1, 12)).ReturnsAsync(paginatedList);
+        _mockJobService.Setup(r => r.GetPaginatedJobsAsync(1, 12)).ReturnsAsync(paginatedList);
 
         var result = await _controller.GetJobs();
 
@@ -78,7 +66,7 @@ public class JobsControllerTests
             PostedDate = DateTime.UtcNow
         };
 
-        _mockJobRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(job);
+        _mockJobService.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(job);
 
         var result = await _controller.GetJob(1);
 
@@ -90,7 +78,7 @@ public class JobsControllerTests
     [Fact]
     public async Task GetJob_NonExistentId_ReturnsNotFound()
     {
-        _mockJobRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Job?)null);
+        _mockJobService.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Job?)null);
 
         var result = await _controller.GetJob(999);
 
@@ -111,7 +99,7 @@ public class JobsControllerTests
             }
         };
 
-        _mockJobRepo.Setup(r => r.SearchJobsAsync("Engineer")).ReturnsAsync(jobs);
+        _mockJobService.Setup(r => r.SearchJobsAsync("Engineer")).ReturnsAsync(jobs);
 
         var result = await _controller.Search("Engineer");
 

@@ -50,4 +50,24 @@ public class ApplicationRepository : IApplicationRepository
             .Where(a => a.JobId == jobId)
             .ToListAsync();
     }
+
+    public async Task<Application?> GetByIdAsync(int id)
+    {
+        return await _context.Applications
+            .Include(a => a.Job)
+            .Include(a => a.Applicant)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.Applications.CountAsync();
+    }
+
+    public async Task<List<Application>> GetByJobIdsAsync(List<int> jobIds)
+    {
+        return await _context.Applications
+            .Where(a => jobIds.Contains(a.JobId))
+            .ToListAsync();
+    }
 }

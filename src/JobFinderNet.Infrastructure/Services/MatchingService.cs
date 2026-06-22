@@ -1,18 +1,17 @@
-using Microsoft.EntityFrameworkCore;
-using JobFinderNet.Core.Models;
 using JobFinderNet.Core.DTOs;
+using JobFinderNet.Core.Models;
+using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
-using JobFinderNet.Infrastructure.Data;
 
 namespace JobFinderNet.Infrastructure.Services;
 
 public class MatchingService : IMatchingService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IJobRepository _jobRepository;
 
-    public MatchingService(ApplicationDbContext context)
+    public MatchingService(IJobRepository jobRepository)
     {
-        _context = context;
+        _jobRepository = jobRepository;
     }
 
     public async Task<int> CalculateMatchScore(Job job, UserProfile profile)
@@ -28,7 +27,6 @@ public class MatchingService : IMatchingService
         if (profile.Skills.Count == 0)
             return breakdown;
 
-        // Technology overlap (40%)
         var requiredTechs = job.RequiredTechnologies
             .Select(t => t.ToLowerInvariant())
             .ToList();
@@ -58,7 +56,6 @@ public class MatchingService : IMatchingService
             }
         }
 
-        // Seniority match (20%)
         if (!string.IsNullOrEmpty(profile.SeniorityLevel))
         {
             if (!string.IsNullOrEmpty(job.SeniorityLevel))
@@ -96,7 +93,6 @@ public class MatchingService : IMatchingService
             }
         }
 
-        // Salary overlap (15%)
         if (profile.DesiredSalaryMin.HasValue || profile.DesiredSalaryMax.HasValue)
         {
             var userMin = profile.DesiredSalaryMin ?? 0;
@@ -126,7 +122,6 @@ public class MatchingService : IMatchingService
             }
         }
 
-        // Location/Remote (15%)
         if (profile.IsOpenToRemote || !string.IsNullOrEmpty(profile.PreferredLocation))
         {
             if (job.IsRemote && profile.IsOpenToRemote)
@@ -160,7 +155,6 @@ public class MatchingService : IMatchingService
             }
         }
 
-        // Job type (10%)
         if (!string.IsNullOrEmpty(profile.PreferredJobType))
         {
             if (!string.IsNullOrEmpty(job.JobType))
@@ -195,10 +189,7 @@ public class MatchingService : IMatchingService
 
     public async Task<List<(Job Job, int Score)>> GetTopMatches(UserProfile profile, int limit = 10)
     {
-        var jobs = await _context.Jobs
-            .Where(j => j.IsActive)
-            .AsNoTracking()
-            .ToListAsync();
+        var jobs = await _jobRepository.GetAllActiveJobsAsync();
 
         var scored = new List<(Job Job, int Score)>();
 
@@ -213,10 +204,7 @@ public class MatchingService : IMatchingService
 
     public async Task<List<(Job Job, int Score)>> GetTopMatchesAboveThreshold(UserProfile profile, int limit = 10)
     {
-        var jobs = await _context.Jobs
-            .Where(j => j.IsActive)
-            .AsNoTracking()
-            .ToListAsync();
+        var jobs = await _jobRepository.GetAllActiveJobsAsync();
 
         var scored = new List<(Job Job, int Score)>();
 
@@ -234,10 +222,7 @@ public class MatchingService : IMatchingService
 
     public async Task<List<MatchedJobDto>> GetTopMatchesDetailed(UserProfile profile, int limit = 10)
     {
-        var jobs = await _context.Jobs
-            .Where(j => j.IsActive)
-            .AsNoTracking()
-            .ToListAsync();
+        var jobs = await _jobRepository.GetAllActiveJobsAsync();
 
         var results = new List<MatchedJobDto>();
 

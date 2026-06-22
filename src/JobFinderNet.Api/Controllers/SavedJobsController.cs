@@ -1,9 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFinderNet.Core.Models;
-using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Core.Interfaces.Services;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -12,74 +10,56 @@ namespace JobFinderNet.Api.Controllers;
 [Authorize]
 public class SavedJobsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ISavedJobService _savedJobService;
 
-    public SavedJobsController(ApplicationDbContext context)
+    public SavedJobsController(ISavedJobService savedJobService)
     {
-        _context = context;
+        _savedJobService = savedJobService;
     }
 
     [HttpGet]
     public async Task<ActionResult> GetSavedJobs()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var saved = await _context.SavedJobs
-            .Include(s => s.Job)
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.SavedDate)
-            .ToListAsync();
-
+        var userId = User.GetUserId()!;
+        var saved = await _savedJobService.GetUserSavedJobsAsync(userId);
         return Ok(saved);
     }
 
     [HttpPost("{jobId}")]
     public async Task<ActionResult> SaveJob(int jobId)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var job = await _context.Jobs.FindAsync(jobId);
-        if (job == null) return NotFound();
-
-        var existing = await _context.SavedJobs
-            .FirstOrDefaultAsync(s => s.UserId == userId && s.JobId == jobId);
-        if (existing != null)
-            return Ok(new { message = "Already saved" });
-
-        var saved = new SavedJob
+        var userId = User.GetUserId()!;
+        try
         {
-            UserId = userId,
-            JobId = jobId,
-            SavedDate = DateTime.UtcNow
-        };
-
-        _context.SavedJobs.Add(saved);
-        await _context.SaveChangesAsync();
-        return Ok(new { message = "Job saved" });
+            await _savedJobService.SaveJobAsync(userId, jobId);
+            return Ok(new { message = "Job saved" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpDelete("{jobId}")]
     public async Task<ActionResult> UnsaveJob(int jobId)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var saved = await _context.SavedJobs
-            .FirstOrDefaultAsync(s => s.UserId == userId && s.JobId == jobId);
-
-        if (saved == null) return NotFound();
-
-        _context.SavedJobs.Remove(saved);
-        await _context.SaveChangesAsync();
-        return Ok(new { message = "Job unsaved" });
+        var userId = User.GetUserId()!;
+        try
+        {
+            await _savedJobService.UnsaveJobAsync(userId, jobId);
+            return Ok(new { message = "Job unsaved" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpGet("ids")]
     public async Task<ActionResult> GetSavedJobIds()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var ids = await _context.SavedJobs
-            .Where(s => s.UserId == userId)
-            .Select(s => s.JobId)
-            .ToListAsync();
-
+        var userId = User.GetUserId()!;
+        var ids = await _savedJobService.GetUserSavedJobIdsAsync(userId);
         return Ok(ids);
     }
 }

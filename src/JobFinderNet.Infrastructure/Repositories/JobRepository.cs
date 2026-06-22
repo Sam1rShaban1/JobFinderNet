@@ -130,4 +130,45 @@ public class JobRepository : IJobRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<List<Job>> GetSimilarJobsAsync(int jobId, string? industry, string companyName, List<string> technologies, int limit = 6)
+    {
+        return await _context.Jobs
+            .Where(j => j.Id != jobId && j.IsActive && (
+                (j.Industry != null && j.Industry == industry) ||
+                (j.CompanyName == companyName) ||
+                j.RequiredTechnologies.Any(t => technologies.Contains(t))
+            ))
+            .OrderByDescending(j => j.RequiredTechnologies.Count(t => technologies.Contains(t)))
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<List<Job>> GetJobsWithoutTechnologiesAsync()
+    {
+        return await _context.Jobs
+            .Where(j => j.RequiredTechnologies.Count == 0 && j.PreferredTechnologies.Count == 0)
+            .ToListAsync();
+    }
+
+    public async Task<List<Job>> GetAllActiveJobsAsync()
+    {
+        return await _context.Jobs
+            .Where(j => j.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.Jobs.CountAsync();
+    }
+
+    public async Task<Dictionary<string, int>> GetJobsByTypeAsync()
+    {
+        return await _context.Jobs
+            .GroupBy(j => j.JobType)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Type, x => x.Count);
+    }
 }

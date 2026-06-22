@@ -9,4 +9,6 @@ public interface IApplicationService
     Task<bool> HasUserAppliedAsync(string userId, int jobId);
     Task<IEnumerable<Application>> GetUserApplicationsAsync(string userId);
     Task<IEnumerable<Application>> GetJobApplicationsAsync(int jobId);
+    Task<List<ApplicationNote>> GetNotesAsync(int applicationId);
+    Task<ApplicationNote?> AddNoteAsync(int applicationId, string userId, string content);
 }

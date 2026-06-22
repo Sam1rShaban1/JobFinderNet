@@ -11,22 +11,22 @@ public class ApplicationService : IApplicationService
 {
     private readonly IJobRepository _jobRepository;
     private readonly IApplicationRepository _applicationRepository;
+    private readonly IApplicationNoteRepository _applicationNoteRepository;
+    private readonly INotificationRepository _notificationRepository;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ApplicationDbContext _context;
-    private readonly INotificationService _notificationService;
 
     public ApplicationService(
         IJobRepository jobRepository,
         IApplicationRepository applicationRepository,
-        UserManager<ApplicationUser> userManager,
-        ApplicationDbContext context,
-        INotificationService notificationService)
+        IApplicationNoteRepository applicationNoteRepository,
+        INotificationRepository notificationRepository,
+        UserManager<ApplicationUser> userManager)
     {
         _jobRepository = jobRepository;
         _applicationRepository = applicationRepository;
+        _applicationNoteRepository = applicationNoteRepository;
+        _notificationRepository = notificationRepository;
         _userManager = userManager;
-        _context = context;
-        _notificationService = notificationService;
     }
 
     public async Task<ApplicationResult> SubmitApplicationAsync(int jobId, string userId, string? coverLetter = null)
@@ -64,44 +64,46 @@ public class ApplicationService : IApplicationService
             return ApplicationResult.CreateError("Failed to submit application");
 
         var applicantName = applicant.UserName ?? applicant.Email ?? "Applicant";
-        await _notificationService.SendApplicationSubmittedAsync(
-            applicant.Email ?? "", applicantName, job.Title, job.CompanyName);
-
-        if (job.Employer != null)
+        await _notificationRepository.AddAsync(new AppNotification
         {
-            var employerName = job.Employer.CompanyName ?? job.Employer.UserName ?? "Employer";
-            await _notificationService.SendNewApplicationToEmployerAsync(
-                job.Employer.Email ?? "", employerName, applicantName, job.Title);
-        }
+            UserId = job.EmployerId,
+            Title = "New Application",
+            Message = $"{applicantName} applied to {job.Title}",
+            Link = $"/jobs/{job.Id}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await _notificationRepository.SaveChangesAsync();
 
         return ApplicationResult.CreateSuccess(application);
     }
 
     public async Task<ApplicationResult> UpdateApplicationStatusAsync(int applicationId, ApplicationStatus newStatus)
     {
-        var application = await _context.Applications
-            .Include(a => a.Job)
-            .Include(a => a.Applicant)
-            .FirstOrDefaultAsync(a => a.Id == applicationId);
-
+        var application = await _applicationRepository.GetByIdAsync(applicationId);
         if (application == null)
             return ApplicationResult.CreateError("Application not found");
 
-        if (application.Status == newStatus)
-            return ApplicationResult.CreateError($"Application is already {newStatus.ToString().ToLower()}");
-
-        if (application.Status == ApplicationStatus.Rejected)
-            return ApplicationResult.CreateError($"Cannot change status from Rejected");
-
         application.Status = newStatus;
-        await _context.SaveChangesAsync();
+        await _applicationRepository.AddAsync(application);
 
-        var applicantName = application.Applicant.UserName ?? application.Applicant.Email ?? "Applicant";
-        await _notificationService.SendApplicationStatusChangedAsync(
-            application.Applicant.Email ?? "",
-            applicantName,
-            application.Job.Title,
-            newStatus);
+        var statusLabel = newStatus switch
+        {
+            ApplicationStatus.Accepted => "accepted",
+            ApplicationStatus.Rejected => "not selected",
+            ApplicationStatus.Screening => "moved to screening",
+            ApplicationStatus.Interview => "moved to interview",
+            _ => newStatus.ToString().ToLower()
+        };
+
+        await _notificationRepository.AddAsync(new AppNotification
+        {
+            UserId = application.ApplicantId,
+            Title = "Application Update",
+            Message = $"Your application has been {statusLabel}",
+            Link = "/my-applications",
+            CreatedAt = DateTime.UtcNow
+        });
+        await _notificationRepository.SaveChangesAsync();
 
         return ApplicationResult.CreateSuccess(application);
     }
@@ -119,5 +121,27 @@ public class ApplicationService : IApplicationService
     public async Task<IEnumerable<Application>> GetJobApplicationsAsync(int jobId)
     {
         return await _applicationRepository.GetJobApplications(jobId);
+    }
+
+    public async Task<List<ApplicationNote>> GetNotesAsync(int applicationId)
+    {
+        return await _applicationNoteRepository.GetByApplicationIdAsync(applicationId);
+    }
+
+    public async Task<ApplicationNote?> AddNoteAsync(int applicationId, string userId, string content)
+    {
+        var application = await _applicationRepository.GetByIdAsync(applicationId);
+        if (application == null) return null;
+
+        var note = new ApplicationNote
+        {
+            ApplicationId = applicationId,
+            UserId = userId,
+            Content = content,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _applicationNoteRepository.AddAsync(note);
+        return note;
     }
 }

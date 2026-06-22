@@ -16,4 +16,9 @@ public interface IJobRepository
     Task<List<Job>> SearchJobsAsync(string query);
     Task<List<Job>> GetRecentJobsAsync(int count);
     Task DeleteJobAsync(int id);
+    Task<List<Job>> GetSimilarJobsAsync(int jobId, string? industry, string companyName, List<string> technologies, int limit = 6);
+    Task<List<Job>> GetJobsWithoutTechnologiesAsync();
+    Task<List<Job>> GetAllActiveJobsAsync();
+    Task<int> GetCountAsync();
+    Task<Dictionary<string, int>> GetJobsByTypeAsync();
 }

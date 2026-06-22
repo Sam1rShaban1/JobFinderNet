@@ -5,14 +5,14 @@ using Microsoft.Extensions.Options;
 using UglyToad.PdfPig;
 using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Models;
+using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
-using JobFinderNet.Infrastructure.Data;
 
 namespace JobFinderNet.Infrastructure.Services;
 
 public class AiService : IAiService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUserProfileRepository _userProfileRepository;
     private readonly IMatchingService _matchingService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly NvidiaOptions _nvidiaOptions;
@@ -21,12 +21,12 @@ public class AiService : IAiService
     private const string MODEL = "moonshotai/kimi-k2.6";
 
     public AiService(
-        ApplicationDbContext context,
+        IUserProfileRepository userProfileRepository,
         IMatchingService matchingService,
         IHttpClientFactory httpClientFactory,
         IOptions<NvidiaOptions> nvidiaOptions)
     {
-        _context = context;
+        _userProfileRepository = userProfileRepository;
         _matchingService = matchingService;
         _httpClientFactory = httpClientFactory;
         _nvidiaOptions = nvidiaOptions.Value;
@@ -59,11 +59,11 @@ public class AiService : IAiService
 
     public async Task<List<MatchedJobDto>> GetRecommendationsAsync(string userId, ParsedResume resume, int limit = 10)
     {
-        var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        var profile = await _userProfileRepository.GetByUserIdAsync(userId);
         if (profile == null)
         {
             profile = new UserProfile { UserId = userId };
-            _context.UserProfiles.Add(profile);
+            await _userProfileRepository.AddAsync(profile);
         }
 
         var newSkills = resume.Skills
@@ -90,7 +90,7 @@ public class AiService : IAiService
         }
 
         profile.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        await _userProfileRepository.SaveChangesAsync();
 
         var matches = await _matchingService.GetTopMatchesDetailed(profile, limit);
         return matches;
@@ -205,7 +205,7 @@ Resume text:
 
     public async Task<CoverLetterResponse> GenerateCoverLetterAsync(string userId, CoverLetterRequest request)
     {
-        var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        var profile = await _userProfileRepository.GetByUserIdAsync(userId);
 
         var skills = profile?.Skills.Any() == true
             ? string.Join(", ", profile.Skills)
@@ -273,7 +273,6 @@ Keep it under 400 words. Do not use placeholder text like [Company Name] — wri
         }
         catch
         {
-            // Tips are optional — don't fail the whole request
         }
 
         return new CoverLetterResponse

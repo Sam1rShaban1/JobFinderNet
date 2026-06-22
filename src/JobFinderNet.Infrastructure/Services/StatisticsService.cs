@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using JobFinderNet.Core.DTOs;
 using JobFinderNet.Core.Models;
+using JobFinderNet.Core.Interfaces.Repositories;
 using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Infrastructure.Data;
 
@@ -8,12 +10,17 @@ namespace JobFinderNet.Infrastructure.Services;
 
 public class StatisticsService : IStatisticsService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IJobRepository _jobRepository;
+    private readonly IApplicationRepository _applicationRepository;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public StatisticsService(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    public StatisticsService(
+        IJobRepository jobRepository,
+        IApplicationRepository applicationRepository,
+        UserManager<ApplicationUser> userManager)
     {
-        _context = context;
+        _jobRepository = jobRepository;
+        _applicationRepository = applicationRepository;
         _userManager = userManager;
     }
 
@@ -22,9 +29,8 @@ public class StatisticsService : IStatisticsService
         var now = DateTime.UtcNow;
         var sixMonthsAgo = now.AddMonths(-6);
 
-        var jobs = await _context.Jobs.ToListAsync();
-        var applications = await _context.Applications.ToListAsync();
-        var users = await _context.Users.ToListAsync();
+        var jobs = await _jobRepository.GetAllActiveJobsAsync();
+        var applications = await _applicationRepository.GetByJobIdsAsync(jobs.Select(j => j.Id).ToList());
 
         var employerCount = (await _userManager.GetUsersInRoleAsync("Employer")).Count;
         var applicantCount = (await _userManager.GetUsersInRoleAsync("Applicant")).Count;
@@ -43,7 +49,7 @@ public class StatisticsService : IStatisticsService
 
         return new JobStatisticsDto
         {
-            TotalActiveJobs = jobs.Count(j => j.IsActive),
+            TotalActiveJobs = jobs.Count,
             TotalApplications = applications.Count,
             TotalEmployers = employerCount,
             TotalApplicants = applicantCount,
@@ -57,19 +63,19 @@ public class StatisticsService : IStatisticsService
 
     public async Task<int> GetEmployerJobCountAsync(string employerId)
     {
-        return await _context.Jobs.CountAsync(j => j.EmployerId == employerId);
+        var jobs = await _jobRepository.GetEmployerJobsAsync(employerId);
+        return jobs.Count;
     }
 
     public async Task<Dictionary<string, int>> GetApplicationsByJobAsync(string employerId)
     {
-        return await _context.Jobs
-            .Where(j => j.EmployerId == employerId)
-            .Select(j => new
-            {
-                JobTitle = j.Title,
-                ApplicationCount = j.Applications.Count
-            })
-            .ToDictionaryAsync(x => x.JobTitle, x => x.ApplicationCount);
+        var jobs = await _jobRepository.GetEmployerJobsAsync(employerId);
+        var jobIds = jobs.Select(j => j.Id).ToList();
+        var applications = await _applicationRepository.GetByJobIdsAsync(jobIds);
+
+        return jobs.ToDictionary(
+            j => j.Title,
+            j => applications.Count(a => a.JobId == j.Id));
     }
 
     public async Task<EmployerDashboardDto> GetEmployerDashboardAsync(string employerId)
@@ -77,14 +83,9 @@ public class StatisticsService : IStatisticsService
         var now = DateTime.UtcNow;
         var sixMonthsAgo = now.AddMonths(-6);
 
-        var employerJobs = await _context.Jobs
-            .Where(j => j.EmployerId == employerId)
-            .ToListAsync();
-
+        var employerJobs = await _jobRepository.GetEmployerJobsAsync(employerId);
         var jobIds = employerJobs.Select(j => j.Id).ToList();
-        var applications = await _context.Applications
-            .Where(a => jobIds.Contains(a.JobId))
-            .ToListAsync();
+        var applications = await _applicationRepository.GetByJobIdsAsync(jobIds);
 
         var monthlyPostings = employerJobs
             .Where(j => j.PostedDate >= sixMonthsAgo)
@@ -119,6 +120,35 @@ public class StatisticsService : IStatisticsService
                 .ToDictionary(g => g.Key.ToString(), g => g.Count()),
             TopJobs = topJobs,
             MonthlyPostings = monthlyPostings
+        };
+    }
+
+    public async Task<PublicStatisticsDto> GetPublicStatisticsAsync()
+    {
+        var totalJobs = await _jobRepository.GetCountAsync();
+        var jobsByType = await _jobRepository.GetJobsByTypeAsync();
+        var allJobs = await _jobRepository.GetAllActiveJobsAsync();
+
+        var jobsWithTech = allJobs.Count(j =>
+            j.RequiredTechnologies.Count > 0 || j.PreferredTechnologies.Count > 0);
+
+        var allTech = allJobs
+            .SelectMany(j => j.RequiredTechnologies)
+            .Concat(allJobs.SelectMany(j => j.PreferredTechnologies))
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => t.Trim().ToLowerInvariant())
+            .Distinct()
+            .Count();
+
+        return new PublicStatisticsDto
+        {
+            TotalJobs = totalJobs,
+            TotalUsers = (await _userManager.GetUsersInRoleAsync("Applicant")).Count
+                       + (await _userManager.GetUsersInRoleAsync("Employer")).Count,
+            TotalApplications = await _applicationRepository.GetCountAsync(),
+            JobsWithTech = jobsWithTech,
+            TotalTechnologies = allTech,
+            JobsByType = jobsByType
         };
     }
 }

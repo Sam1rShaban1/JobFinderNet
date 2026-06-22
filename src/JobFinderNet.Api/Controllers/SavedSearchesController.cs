@@ -1,11 +1,8 @@
-using System.Security.Claims;
-using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using JobFinderNet.Core.Models;
+using Microsoft.AspNetCore.Mvc;
 using JobFinderNet.Core.DTOs;
-using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Core.Interfaces.Services;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -14,137 +11,66 @@ namespace JobFinderNet.Api.Controllers;
 [Authorize]
 public class SavedSearchesController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ISavedSearchService _savedSearchService;
 
-    public SavedSearchesController(ApplicationDbContext context)
+    public SavedSearchesController(ISavedSearchService savedSearchService)
     {
-        _context = context;
+        _savedSearchService = savedSearchService;
     }
 
     [HttpGet]
     public async Task<ActionResult> GetSavedSearches()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var searches = await _context.SavedSearches
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
-
+        var userId = User.GetUserId()!;
+        var searches = await _savedSearchService.GetUserSavedSearchesAsync(userId);
         return Ok(searches);
     }
 
     [HttpPost]
     public async Task<ActionResult> CreateSavedSearch([FromBody] SavedSearchDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var profile = await _context.UserProfiles
-            .FirstOrDefaultAsync(p => p.UserId == userId);
-        if (profile == null)
-            return BadRequest(new { message = "Create a profile first" });
-
-        var filtersJson = JsonSerializer.Serialize(new
+        var userId = User.GetUserId()!;
+        try
         {
-            search = dto.Search,
-            location = dto.Location,
-            jobType = dto.JobType,
-            salaryMin = dto.SalaryMin,
-            salaryMax = dto.SalaryMax,
-            isRemote = dto.IsRemote,
-            seniority = dto.Seniority,
-            tech = dto.Tech
-        });
-
-        var savedSearch = new SavedSearch
+            var savedSearch = await _savedSearchService.CreateSavedSearchAsync(userId, dto);
+            return Ok(savedSearch);
+        }
+        catch (InvalidOperationException ex)
         {
-            UserId = userId,
-            Name = dto.Name,
-            FiltersJson = filtersJson,
-            EmailFrequency = dto.EmailFrequency,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.SavedSearches.Add(savedSearch);
-        await _context.SaveChangesAsync();
-
-        return Ok(savedSearch);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateSavedSearch(int id, [FromBody] SavedSearchDto dto)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var savedSearch = await _context.SavedSearches
-            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
-
+        var userId = User.GetUserId()!;
+        var savedSearch = await _savedSearchService.UpdateSavedSearchAsync(id, userId, dto);
         if (savedSearch == null) return NotFound();
-
-        var filtersJson = JsonSerializer.Serialize(new
-        {
-            search = dto.Search,
-            location = dto.Location,
-            jobType = dto.JobType,
-            salaryMin = dto.SalaryMin,
-            salaryMax = dto.SalaryMax,
-            isRemote = dto.IsRemote,
-            seniority = dto.Seniority,
-            tech = dto.Tech
-        });
-
-        savedSearch.Name = dto.Name;
-        savedSearch.FiltersJson = filtersJson;
-        savedSearch.EmailFrequency = dto.EmailFrequency;
-
-        await _context.SaveChangesAsync();
         return Ok(savedSearch);
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteSavedSearch(int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var savedSearch = await _context.SavedSearches
-            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
-
-        if (savedSearch == null) return NotFound();
-
-        _context.SavedSearches.Remove(savedSearch);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Saved search deleted" });
+        var userId = User.GetUserId()!;
+        try
+        {
+            await _savedSearchService.DeleteSavedSearchAsync(id, userId);
+            return Ok(new { message = "Saved search deleted" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPost("{id}/run")]
     public async Task<ActionResult> RunSavedSearch(int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var savedSearch = await _context.SavedSearches
-            .FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
-
-        if (savedSearch == null) return NotFound();
-
-        var profile = await _context.UserProfiles
-            .FirstOrDefaultAsync(p => p.UserId == userId);
-        if (profile == null) return BadRequest(new { message = "Profile not found" });
-
-        var matchingService = HttpContext.RequestServices.GetRequiredService<Core.Interfaces.Services.IMatchingService>();
-        var matches = await matchingService.GetTopMatches(profile, 10);
-
-        savedSearch.LastRunAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            searchName = savedSearch.Name,
-            matchCount = matches.Count,
-            matches = matches.Select(m => new
-            {
-                m.Job.Id,
-                m.Job.Title,
-                m.Job.CompanyName,
-                m.Job.Location,
-                Score = m.Score
-            })
-        });
+        var userId = User.GetUserId()!;
+        var result = await _savedSearchService.RunSavedSearchAsync(id, userId);
+        if (result == null) return NotFound();
+        return Ok(result);
     }
 }

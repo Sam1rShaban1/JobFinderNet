@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFinderNet.Api.Helpers;
 using JobFinderNet.Core.Interfaces.Services;
-using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
 
@@ -11,12 +9,10 @@ namespace JobFinderNet.Api.Controllers;
 [Route("api/[controller]")]
 public class StatisticsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
     private readonly IStatisticsService _statisticsService;
 
-    public StatisticsController(ApplicationDbContext context, IStatisticsService statisticsService)
+    public StatisticsController(IStatisticsService statisticsService)
     {
-        _context = context;
         _statisticsService = statisticsService;
     }
 
@@ -24,38 +20,8 @@ public class StatisticsController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult> GetStatistics()
     {
-        var totalJobs = await _context.Jobs.CountAsync();
-        var totalUsers = await _context.Users.CountAsync();
-        var totalApplications = await _context.Applications.CountAsync();
-        var jobsWithTech = await _context.Jobs.CountAsync(j =>
-            j.RequiredTechnologies.Count > 0 || j.PreferredTechnologies.Count > 0);
-
-        var allJobs = await _context.Jobs
-            .Select(j => new { j.RequiredTechnologies, j.PreferredTechnologies })
-            .ToListAsync();
-
-        var allTech = allJobs
-            .SelectMany(j => j.RequiredTechnologies)
-            .Concat(allJobs.SelectMany(j => j.PreferredTechnologies))
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .Select(t => t.Trim().ToLowerInvariant())
-            .Distinct()
-            .Count();
-
-        var jobsByType = await _context.Jobs
-            .GroupBy(j => j.JobType)
-            .Select(g => new { Type = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Type, x => x.Count);
-
-        return Ok(new
-        {
-            totalJobs,
-            totalUsers,
-            totalApplications,
-            jobsWithTech,
-            totalTechnologies = allTech,
-            jobsByType
-        });
+        var stats = await _statisticsService.GetPublicStatisticsAsync();
+        return Ok(stats);
     }
 
     [HttpGet("employer")]

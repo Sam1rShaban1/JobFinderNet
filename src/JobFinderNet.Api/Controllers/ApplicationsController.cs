@@ -1,12 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using JobFinderNet.Core.Models;
+using Microsoft.AspNetCore.Mvc;
 using JobFinderNet.Core.DTOs;
-using JobFinderNet.Core.Interfaces.Repositories;
-using JobFinderNet.Infrastructure.Data;
+using JobFinderNet.Core.Interfaces.Services;
 using JobFinderNet.Api.Helpers;
 
 namespace JobFinderNet.Api.Controllers;
@@ -16,21 +11,11 @@ namespace JobFinderNet.Api.Controllers;
 [Authorize]
 public class ApplicationsController : ControllerBase
 {
-    private readonly IApplicationRepository _applicationRepository;
-    private readonly IJobRepository _jobRepository;
-    private readonly ApplicationDbContext _context;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IApplicationService _applicationService;
 
-    public ApplicationsController(
-        IApplicationRepository applicationRepository,
-        IJobRepository jobRepository,
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager)
+    public ApplicationsController(IApplicationService applicationService)
     {
-        _applicationRepository = applicationRepository;
-        _jobRepository = jobRepository;
-        _context = context;
-        _userManager = userManager;
+        _applicationService = applicationService;
     }
 
     [HttpPost("{jobId}")]
@@ -38,50 +23,16 @@ public class ApplicationsController : ControllerBase
     public async Task<ActionResult> Apply(int jobId, [FromBody] ApplyRequest? request = null)
     {
         var userId = User.GetUserId()!;
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return Unauthorized();
-
         if (!User.HasRole("Applicant"))
             return Forbid();
 
-        if (!User.HasClaim("email_verified", "true") && !user.EmailConfirmed)
+        if (!User.HasClaim("email_verified", "true"))
             return BadRequest(new { message = "Please verify your email before applying" });
 
-        var job = await _jobRepository.GetByIdAsync(jobId);
-        if (job == null || !job.IsActive)
-            return NotFound(new { message = "Job not found or inactive" });
+        var result = await _applicationService.SubmitApplicationAsync(jobId, userId, request?.CoverLetter);
 
-        var hasApplied = await _applicationRepository.HasUserAppliedToJob(userId, jobId);
-        if (hasApplied)
-            return BadRequest(new { message = "Already applied to this job" });
-
-        var application = new Application
-        {
-            JobId = jobId,
-            Job = job,
-            ApplicantId = userId,
-            Applicant = user,
-            Status = ApplicationStatus.Pending,
-            AppliedDate = DateTime.UtcNow,
-            CoverLetter = request?.CoverLetter
-        };
-
-        _context.Entry(job).State = EntityState.Unchanged;
-        _context.Entry(user).State = EntityState.Unchanged;
-        var success = await _applicationRepository.AddAsync(application);
-        if (!success)
-            return BadRequest(new { message = "Failed to submit application" });
-
-        // Create in-app notification for employer
-        _context.Notifications.Add(new AppNotification
-        {
-            UserId = job.EmployerId,
-            Title = "New Application",
-            Message = $"{user.UserName ?? user.Email} applied to {job.Title}",
-            Link = $"/jobs/{job.Id}",
-            CreatedAt = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync();
+        if (!result.Succeeded)
+            return BadRequest(new { message = result.Message });
 
         return Ok(new { message = "Application submitted successfully" });
     }
@@ -90,7 +41,7 @@ public class ApplicationsController : ControllerBase
     public async Task<ActionResult> MyApplications()
     {
         var userId = User.GetUserId()!;
-        var applications = await _applicationRepository.GetUserApplicationsAsync(userId);
+        var applications = await _applicationService.GetUserApplicationsAsync(userId);
         return Ok(applications);
     }
 
@@ -101,33 +52,12 @@ public class ApplicationsController : ControllerBase
         if (!User.HasAnyRole("Employer", "Admin"))
             return Forbid();
 
-        var application = await _context.Applications.FindAsync(id);
-        if (application == null) return NotFound();
-
-        if (!Enum.TryParse<ApplicationStatus>(dto.Status, true, out var status))
+        if (!Enum.TryParse<Core.Models.ApplicationStatus>(dto.Status, true, out var status))
             return BadRequest(new { message = "Invalid status. Use Pending, Screening, Interview, Accepted, or Rejected" });
 
-        application.Status = status;
-        await _context.SaveChangesAsync();
-
-        // Create in-app notification for applicant
-        var statusLabel = status switch
-        {
-            ApplicationStatus.Accepted => "accepted",
-            ApplicationStatus.Rejected => "not selected",
-            ApplicationStatus.Screening => "moved to screening",
-            ApplicationStatus.Interview => "moved to interview",
-            _ => status.ToString().ToLower()
-        };
-        _context.Notifications.Add(new AppNotification
-        {
-            UserId = application.ApplicantId,
-            Title = "Application Update",
-            Message = $"Your application has been {statusLabel}",
-            Link = "/my-applications",
-            CreatedAt = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync();
+        var result = await _applicationService.UpdateApplicationStatusAsync(id, status);
+        if (!result.Succeeded)
+            return BadRequest(new { message = result.Message });
 
         return Ok(new { message = $"Application {status.ToString().ToLower()}" });
     }
@@ -139,11 +69,7 @@ public class ApplicationsController : ControllerBase
         if (!User.HasAnyRole("Employer", "Admin"))
             return Forbid();
 
-        var notes = await _context.ApplicationNotes
-            .Where(n => n.ApplicationId == id)
-            .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
-
+        var notes = await _applicationService.GetNotesAsync(id);
         return Ok(notes);
     }
 
@@ -154,22 +80,9 @@ public class ApplicationsController : ControllerBase
         if (!User.HasAnyRole("Employer", "Admin"))
             return Forbid();
 
-        var application = await _context.Applications.FindAsync(id);
-        if (application == null) return NotFound();
-
         var userId = User.GetUserId()!;
-
-        var note = new ApplicationNote
-        {
-            ApplicationId = id,
-            UserId = userId,
-            Content = dto.Content,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.ApplicationNotes.Add(note);
-        await _context.SaveChangesAsync();
-
+        var note = await _applicationService.AddNoteAsync(id, userId, dto.Content);
+        if (note == null) return NotFound();
         return Ok(note);
     }
 }
