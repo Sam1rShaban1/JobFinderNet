@@ -51,3 +51,4 @@ client/.agents/
 client/skills-lock.json
 
 /database/seed.sql
+TestResults/

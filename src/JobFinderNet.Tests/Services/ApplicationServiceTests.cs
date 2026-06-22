@@ -100,4 +100,116 @@ public class ApplicationServiceTests
         Assert.False(result.Succeeded);
         Assert.Contains("employers cannot apply", result.Message.ToLower());
     }
+
+    [Fact]
+    public async Task GetUserApplicationsAsync_ReturnsApplications()
+    {
+        var apps = new List<Application>
+        {
+            TestDbContextFactory.CreateTestApplication(1, 1, "app1"),
+            TestDbContextFactory.CreateTestApplication(2, 1, "app1")
+        };
+        _mockAppRepo.Setup(r => r.GetUserApplicationsAsync("app1")).ReturnsAsync(apps);
+
+        var result = await _service.GetUserApplicationsAsync("app1");
+
+        Assert.Equal(2, result.Count());
+    }
+
+    [Fact]
+    public async Task UpdateApplicationStatusAsync_Valid_ReturnsSuccess()
+    {
+        var employer = TestDbContextFactory.CreateTestUser("emp1", "emp@test.com", "Employer");
+        var app = TestDbContextFactory.CreateTestApplication(1, 1, "app1");
+        _mockAppRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(app);
+        _mockAppRepo.Setup(r => r.AddAsync(It.IsAny<Application>())).ReturnsAsync(true);
+        _mockNotificationRepo.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+        var result = await _service.UpdateApplicationStatusAsync(1, ApplicationStatus.Accepted);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task UpdateApplicationStatusAsync_NotFound_ReturnsError()
+    {
+        _mockAppRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Application?)null);
+
+        var result = await _service.UpdateApplicationStatusAsync(999, ApplicationStatus.Accepted);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("not found", result.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task GetNotesAsync_ReturnsNotes()
+    {
+        var notes = new List<ApplicationNote>
+        {
+            new() { Id = 1, ApplicationId = 1, UserId = "emp1", Content = "Note 1", CreatedAt = DateTime.UtcNow },
+            new() { Id = 2, ApplicationId = 1, UserId = "emp1", Content = "Note 2", CreatedAt = DateTime.UtcNow }
+        };
+        _mockAppNoteRepo.Setup(r => r.GetByApplicationIdAsync(1)).ReturnsAsync(notes);
+
+        var result = await _service.GetNotesAsync(1);
+
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task AddNoteAsync_Valid_ReturnsNote()
+    {
+        var app = TestDbContextFactory.CreateTestApplication(1, 1, "app1");
+        _mockAppRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(app);
+
+        var result = await _service.AddNoteAsync(1, "emp1", "Test note");
+
+        Assert.NotNull(result);
+        Assert.Equal("Test note", result.Content);
+        Assert.Equal("emp1", result.UserId);
+    }
+
+    [Fact]
+    public async Task AddNoteAsync_AppNotFound_ReturnsNull()
+    {
+        _mockAppRepo.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((Application?)null);
+
+        var result = await _service.AddNoteAsync(999, "emp1", "Test note");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task HasUserAppliedAsync_ReturnsTrue()
+    {
+        _mockAppRepo.Setup(r => r.HasUserAppliedToJob("app1", 1)).ReturnsAsync(true);
+
+        var result = await _service.HasUserAppliedAsync("app1", 1);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task HasUserAppliedAsync_ReturnsFalse()
+    {
+        _mockAppRepo.Setup(r => r.HasUserAppliedToJob("app1", 1)).ReturnsAsync(false);
+
+        var result = await _service.HasUserAppliedAsync("app1", 1);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetJobApplicationsAsync_ReturnsApplications()
+    {
+        var apps = new List<Application>
+        {
+            TestDbContextFactory.CreateTestApplication(1, 1, "app1")
+        };
+        _mockAppRepo.Setup(r => r.GetJobApplications(1)).ReturnsAsync(apps);
+
+        var result = await _service.GetJobApplicationsAsync(1);
+
+        Assert.Single(result);
+    }
 }

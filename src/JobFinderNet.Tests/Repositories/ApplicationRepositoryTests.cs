@@ -92,4 +92,114 @@ public class ApplicationRepositoryTests
 
         Assert.Equal(2, apps.Count());
     }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsApplication()
+    {
+        var context = TestDbContextFactory.CreateInMemoryDbContext();
+        var repo = new ApplicationRepository(context);
+        var applicant = TestDbContextFactory.CreateTestUser("app4", "app4@test.com", "Applicant");
+        var employer = TestDbContextFactory.CreateTestUser("emp4", "emp4@test.com", "Employer");
+        context.Users.AddRange(applicant, employer);
+
+        var job = TestDbContextFactory.CreateTestJob(5, "Job 5", employer.Id);
+        job.Employer = employer;
+        context.Jobs.Add(job);
+
+        var app = new Application
+        {
+            Id = 1, JobId = 5, Job = job, ApplicantId = applicant.Id, Applicant = applicant,
+            Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow
+        };
+        context.Applications.Add(app);
+        await context.SaveChangesAsync();
+
+        var result = await repo.GetByIdAsync(1);
+
+        Assert.NotNull(result);
+        Assert.Equal(5, result.JobId);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NotFound_ReturnsNull()
+    {
+        var context = TestDbContextFactory.CreateInMemoryDbContext();
+        var repo = new ApplicationRepository(context);
+
+        var result = await repo.GetByIdAsync(999);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetCountAsync_ReturnsCorrectCount()
+    {
+        var context = TestDbContextFactory.CreateInMemoryDbContext();
+        var repo = new ApplicationRepository(context);
+        var applicant = TestDbContextFactory.CreateTestUser("app5", "app5@test.com", "Applicant");
+        var employer = TestDbContextFactory.CreateTestUser("emp5", "emp5@test.com", "Employer");
+        context.Users.AddRange(applicant, employer);
+
+        var job = TestDbContextFactory.CreateTestJob(6, "Job 6", employer.Id);
+        job.Employer = employer;
+        context.Jobs.Add(job);
+        context.Applications.AddRange(
+            new Application { JobId = 6, Job = job, ApplicantId = applicant.Id, Applicant = applicant, Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow },
+            new Application { JobId = 6, Job = job, ApplicantId = applicant.Id, Applicant = applicant, Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        var count = await repo.GetCountAsync();
+
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public async Task GetByJobIdsAsync_ReturnsMatching()
+    {
+        var context = TestDbContextFactory.CreateInMemoryDbContext();
+        var repo = new ApplicationRepository(context);
+        var applicant = TestDbContextFactory.CreateTestUser("app6", "app6@test.com", "Applicant");
+        var employer = TestDbContextFactory.CreateTestUser("emp6", "emp6@test.com", "Employer");
+        context.Users.AddRange(applicant, employer);
+
+        var job1 = TestDbContextFactory.CreateTestJob(7, "Job 7", employer.Id);
+        job1.Employer = employer;
+        var job2 = TestDbContextFactory.CreateTestJob(8, "Job 8", employer.Id);
+        job2.Employer = employer;
+        context.Jobs.AddRange(job1, job2);
+
+        context.Applications.AddRange(
+            new Application { JobId = 7, Job = job1, ApplicantId = applicant.Id, Applicant = applicant, Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow },
+            new Application { JobId = 8, Job = job2, ApplicantId = applicant.Id, Applicant = applicant, Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        var apps = await repo.GetByJobIdsAsync(new List<int> { 7, 8 });
+
+        Assert.Equal(2, apps.Count);
+    }
+
+    [Fact]
+    public async Task GetJobApplications_ReturnsForJob()
+    {
+        var context = TestDbContextFactory.CreateInMemoryDbContext();
+        var repo = new ApplicationRepository(context);
+        var applicant = TestDbContextFactory.CreateTestUser("app7", "app7@test.com", "Applicant");
+        var employer = TestDbContextFactory.CreateTestUser("emp7", "emp7@test.com", "Employer");
+        context.Users.AddRange(applicant, employer);
+
+        var job = TestDbContextFactory.CreateTestJob(9, "Job 9", employer.Id);
+        job.Employer = employer;
+        context.Jobs.Add(job);
+
+        context.Applications.Add(
+            new Application { JobId = 9, Job = job, ApplicantId = applicant.Id, Applicant = applicant, Status = ApplicationStatus.Pending, AppliedDate = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        var apps = await repo.GetJobApplications(9);
+
+        Assert.Single(apps);
+    }
 }
